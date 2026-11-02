@@ -14,7 +14,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type KeyboardEventHandler, type PointerEventHandler } from "react";
 import { Link } from "react-router-dom";
 
 import { api } from "../api/client";
@@ -103,19 +103,30 @@ function Column({ status, label, items }: { status: ApplicationStatus; label: st
   );
 }
 
+// 滑鼠：整張卡都能拖（移動 5px 才算拖，單點標題就是開詳情）。
+// 鍵盤：拖拉交給右上角的把手按鈕；整張卡若是按鈕，裡面的連結就成了「按鈕裡的連結」，螢幕閱讀器會念不清楚
 function Card({ app }: { app: Application }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: app.id });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({ id: app.id });
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className={`card kanban${isDragging ? " ghosted" : ""}`}>
-      <CardBody app={app} />
+    <div ref={setNodeRef} onPointerDown={listeners?.onPointerDown as PointerEventHandler | undefined} className={`card kanban${isDragging ? " ghosted" : ""}`}>
+      <CardBody app={app} link />
+      <button
+        ref={setActivatorNodeRef}
+        {...attributes}
+        onKeyDown={listeners?.onKeyDown as KeyboardEventHandler | undefined}
+        className="handle"
+        aria-label={`移動「${app.job.title}」`}
+      >
+        ⠿
+      </button>
     </div>
   );
 }
 
-function CardBody({ app }: { app: Application }) {
+function CardBody({ app, link = false }: { app: Application; link?: boolean }) {
   return (
     <>
-      <strong>{app.job.title}</strong>
+      {link ? <Link to={`/applications/${app.id}`} className="card-title">{app.job.title}</Link> : <strong>{app.job.title}</strong>}
       <span className="muted">{app.job.company}</span>
       <span className="muted small">
         {app.appliedAt ? `投遞 ${new Date(app.appliedAt).toLocaleDateString("zh-TW")}` : "尚未投遞"}

@@ -2,7 +2,7 @@
 // access token 15 分鐘就過期；收到 401 時先打 /auth/refresh 換新的再重試一次。
 // 同時有多個請求過期時只換一次：refresh token 會輪替，重複換會被後端當成外洩而整個登出。
 
-import type { Application, ApplicationStats, ApplicationStatus, Job, JobInput, Page, User } from "./types";
+import type { Application, ApplicationDetail, ApplicationStats, ApplicationStatus, Job, JobInput, Note, Page, User } from "./types";
 
 export class ApiError extends Error {
   constructor(readonly status: number, message: string, readonly details?: unknown) {
@@ -57,4 +57,10 @@ export const api = {
   updateApplicationStatus: (id: string, status: ApplicationStatus) =>
     request<Application>("PATCH", `/applications/${id}`, { status }),
   deleteApplication: (id: string) => request<void>("DELETE", `/applications/${id}`),
+  getApplication: (id: string) => request<ApplicationDetail>("GET", `/applications/${id}`),
+
+  addNote: (appId: string, content: string) => request<Note>("POST", `/applications/${appId}/notes`, { content }),
+  updateNote: (appId: string, noteId: string, content: string) =>
+    request<Note>("PATCH", `/applications/${appId}/notes/${noteId}`, { content }),
+  deleteNote: (appId: string, noteId: string) => request<void>("DELETE", `/applications/${appId}/notes/${noteId}`),
 };

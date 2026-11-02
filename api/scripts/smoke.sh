@@ -173,7 +173,10 @@ req GET "/applications?status=OFFER"
 
 req GET /applications/stats
 check "各狀態統計" 200 "$status"
-[[ "$body" == '{"total":1,"byStatus":{"SAVED":0,"APPLIED":0,"INTERVIEW":1,"OFFER":0,"REJECTED":0}}' ]] || fail "統計不對：$body"
+[[ "$body" == '{"total":1,"byStatus":{"SAVED":0,"APPLIED":0,"INTERVIEW":1,"OFFER":0,"REJECTED":0},"funnel":{"tracked":1,"applied":1,"interview":1,"offer":0}}' ]] || fail "統計不對：$body"
+req PATCH "/applications/$app" '{"status":"REJECTED"}'
+req GET /applications/stats
+[[ "$body" == *'"REJECTED":1'* && "$body" == *'"interview":1'* ]] || fail "面試後被拒仍要算進漏斗的面試關：$body"
 
 JAR=$(jar bob)
 req GET "/applications/$app"

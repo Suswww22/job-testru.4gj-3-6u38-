@@ -62,7 +62,29 @@ export interface Application {
   _count?: { notes: number };
 }
 
+export interface Note {
+  id: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApplicationEvent {
+  id: string;
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus;
+  createdAt: string;
+}
+
+export interface ApplicationDetail extends Omit<Application, "job" | "_count"> {
+  job: Job;
+  notes: Note[];
+  events: ApplicationEvent[];
+}
+
 export interface ApplicationStats {
   total: number;
   byStatus: Record<ApplicationStatus, number>;
+  /** 曾經走到該關的投遞數（從狀態歷程算） */
+  funnel: { tracked: number; applied: number; interview: number; offer: number };
 }

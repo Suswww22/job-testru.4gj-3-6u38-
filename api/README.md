@@ -48,7 +48,7 @@ npm run db:stop
 | PATCH | `/api/jobs/:id` | 部分更新 |
 | DELETE | `/api/jobs/:id` | 刪除（投遞與筆記一起刪除） |
 | GET | `/api/applications?status=` | 投遞列表，附職缺摘要與筆記數 |
-| GET | `/api/applications/stats` | 各狀態數量 `{ total, byStatus }`，沒有資料的狀態也回 0 |
+| GET | `/api/applications/stats` | `{ total, byStatus, funnel }`：各狀態目前數量（沒有資料也回 0），以及從狀態歷程算出「曾經走到」追蹤／投遞／面試／錄取的數量 |
 | GET | `/api/applications/:id` | 詳情：職缺、筆記、狀態歷程 |
 | POST | `/api/applications` | 建立：`jobId` 必填，`status?`、`appliedAt?`；一個職缺只能一筆 |
 | PATCH | `/api/applications/:id` | 改狀態或投遞日；狀態有變才記歷程 |

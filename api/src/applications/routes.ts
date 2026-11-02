@@ -35,17 +35,25 @@ applicationsRouter.get("/", async (req, res) => {
   res.json({ items });
 });
 
-/** 各狀態的數量（沒有資料的狀態也回 0，前端畫圖不用補洞） */
+/**
+ * byStatus：各狀態目前的數量（沒有資料的狀態也回 0，前端畫圖不用補洞）
+ * funnel：曾經走到某一關的投遞數，從歷程算。被拒的投遞如果面試過，仍算進「面試」，轉換率才不會被低估
+ */
 applicationsRouter.get("/stats", async (req, res) => {
-  const groups = await prisma.application.groupBy({
-    by: ["status"],
-    where: { userId: userIdOf(req) },
-    _count: { _all: true },
-  });
+  const userId = userIdOf(req);
+  const reached = (statuses: ApplicationStatus[]) =>
+    prisma.application.count({ where: { userId, events: { some: { toStatus: { in: statuses } } } } });
+
+  const [groups, applied, interview, offer] = await Promise.all([
+    prisma.application.groupBy({ by: ["status"], where: { userId }, _count: { _all: true } }),
+    prisma.application.count({ where: { userId, appliedAt: { not: null } } }),
+    reached([ApplicationStatus.INTERVIEW, ApplicationStatus.OFFER]),
+    reached([ApplicationStatus.OFFER]),
+  ]);
   const byStatus = Object.fromEntries(Object.values(ApplicationStatus).map((s) => [s, 0])) as Record<ApplicationStatus, number>;
   for (const g of groups) byStatus[g.status] = g._count._all;
   const total = Object.values(byStatus).reduce((a, b) => a + b, 0);
-  res.json({ total, byStatus });
+  res.json({ total, byStatus, funnel: { tracked: total, applied, interview, offer } });
 });
 
 applicationsRouter.get("/:id", async (req, res) => {

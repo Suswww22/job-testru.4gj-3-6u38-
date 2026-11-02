@@ -131,11 +131,59 @@ button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
   transition: background 0.15s;
 }
 .column.over { background: color-mix(in srgb, var(--status) 12%, var(--surface)); }
-.kanban { display: grid; gap: 2px; padding: 10px 12px; cursor: grab; touch-action: none; }
+.kanban { position: relative; display: grid; gap: 2px; padding: 10px 32px 10px 12px; cursor: grab; touch-action: none; }
+.card-title { color: var(--text); font-weight: 600; text-decoration: none; }
+.card-title:hover { color: var(--accent); text-decoration: underline; }
+.handle {
+  position: absolute; top: 6px; right: 6px;
+  padding: 2px 6px; background: transparent; color: var(--muted);
+  cursor: grab; line-height: 1;
+}
+.handle:hover { color: var(--text); }
 .kanban.ghosted { opacity: 0.35; }
 .kanban.lifted { cursor: grabbing; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); }
 
 @media (max-width: 720px) {
   .board { grid-template-columns: repeat(5, 78vw); scroll-snap-type: x mandatory; }
   .column { scroll-snap-align: start; }
+}
+
+/* ---------- 統計 ---------- */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.tile { display: grid; gap: 2px; }
+.tile strong { font-size: 1.8rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.chart { margin: 0; display: grid; gap: 12px; align-content: start; }
+.chart figcaption { font-weight: 600; }
+.chart p { margin: 0; }
+.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 3em 1fr 5.5em; gap: 10px; align-items: center; }
+.track { height: 14px; border-radius: 4px; background: color-mix(in srgb, var(--border) 50%, transparent); overflow: hidden; }
+.fill { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--status, var(--accent)); min-width: 0; }
+.funnel { --status: var(--accent); }
+.value { font-variant-numeric: tabular-nums; }
+
+/* ---------- 投遞詳情 ---------- */
+.detail { max-width: 960px; }
+.segmented { display: flex; flex-wrap: wrap; gap: 6px; }
+.segmented button { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.segmented button[aria-pressed="true"] { background: var(--status); border-color: var(--status); color: #fff; }
+.detail-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 12px; align-items: start; }
+textarea {
+  font: inherit; color: inherit; resize: vertical;
+  padding: 0.5rem 0.65rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+}
+.notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.notes > li { padding-top: 12px; border-top: 1px solid var(--border); gap: 6px; }
+.note-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+button.small { padding: 0.25rem 0.6rem; }
+.timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--border); display: grid; gap: 12px; }
+.timeline li { position: relative; display: grid; }
+.timeline li::before {
+  content: ""; position: absolute; left: -20px; top: 0.45em;
+  width: 10px; height: 10px; border-radius: 50%; background: var(--status);
+}
+
+@media (max-width: 720px) {
+  .detail-grid { grid-template-columns: 1fr; }
 }
