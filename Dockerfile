@@ -5,7 +5,8 @@
 FROM node:22-bookworm-slim AS base
 # Prisma 的查詢引擎需要 openssl
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
-COPY tsconfig.base.json /app/
+# 根目錄的 package.json 寫著 "type": "module"：少了它，tsc 會把 src/shared 編成 CommonJS，API 啟動時 import 不到
+COPY package.json tsconfig.base.json /app/
 COPY src/shared /app/src/shared
 
 FROM base AS web

@@ -10,7 +10,8 @@ WORKDIR /app/api
 FROM base AS build
 COPY api/package.json api/package-lock.json ./
 RUN npm ci
-COPY tsconfig.base.json /app/
+# 根目錄的 package.json 寫著 "type": "module"：少了它，tsc 會把 src/shared 編成 CommonJS，API 啟動時 import 不到
+COPY package.json tsconfig.base.json /app/
 COPY src/shared /app/src/shared
 COPY api/ ./
 RUN npx prisma generate && npm run build
