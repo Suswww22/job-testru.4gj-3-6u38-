@@ -14,8 +14,9 @@ services:
         sync: false
       - key: JWT_SECRET
         generateValue: true
-      # Render 的負載平衡器在前面
+      # 實測 X-Forwarded-For 是「使用者, Cloudflare, Render 內部」，所以往回數 3 層才是真實 IP。
+      # 設太少會把代理的 IP 當成使用者，登入次數限制變成全站共用一份
       - key: TRUST_PROXY
-        value: "1"
+        value: "3"
       - key: COOKIE_SECURE
         value: "true"
