@@ -10,7 +10,7 @@ cp .env.example .env
 npm run db        # 啟動開發用 Postgres（port 5433），背景執行
 npm run migrate   # 套用 prisma/migrations
 npm run dev       # API：http://localhost:3001/api
-npm run smoke     # curl 冒煙測試（42 項）：登入、token 輪替、次數限制、CRUD、資料隔離、改密碼、刪帳號
+npm run smoke     # curl 冒煙測試（64 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
 npm run db:stop
 ```
 
@@ -27,7 +27,8 @@ npm run db:stop
 | `RefreshToken` | 登入階段；只存 refresh token 的 SHA-256，輪替時用 `familyId` 串起同一次登入 |
 | `Job` | 職缺，攤平自 `shared/types.ts` 的 `Job`；`(userId, externalId)` 唯一，爬蟲匯入時用來去重 |
 | `Application` | 投遞狀態：SAVED → APPLIED → INTERVIEW → OFFER / REJECTED，一個職缺一筆 |
-| `Note` | 投遞筆記 |
+| `ApplicationEvent` | 狀態歷程：每次狀態改變記一筆（from → to、時間），統計從這裡算 |
+| `Note` | 投遞筆記（面試心得、聯絡人…） |
 
 ## API
 
@@ -45,9 +46,20 @@ npm run db:stop
 | GET | `/api/jobs/:id` | 單筆 |
 | POST | `/api/jobs` | 新增：`title`、`company` 必填，其他欄位有預設值 |
 | PATCH | `/api/jobs/:id` | 部分更新 |
-| DELETE | `/api/jobs/:id` | 刪除 |
+| DELETE | `/api/jobs/:id` | 刪除（投遞與筆記一起刪除） |
+| GET | `/api/applications?status=` | 投遞列表，附職缺摘要與筆記數 |
+| GET | `/api/applications/stats` | 各狀態數量 `{ total, byStatus }`，沒有資料的狀態也回 0 |
+| GET | `/api/applications/:id` | 詳情：職缺、筆記、狀態歷程 |
+| POST | `/api/applications` | 建立：`jobId` 必填，`status?`、`appliedAt?`；一個職缺只能一筆 |
+| PATCH | `/api/applications/:id` | 改狀態或投遞日；狀態有變才記歷程 |
+| DELETE | `/api/applications/:id` | 刪除 |
+| POST | `/api/applications/:id/notes` | 新增筆記 |
+| PATCH | `/api/applications/:id/notes/:noteId` | 編輯筆記 |
+| DELETE | `/api/applications/:id/notes/:noteId` | 刪除筆記 |
 
-`/api/jobs` 底下的路由都需要登入（`access_token` cookie），而且只看得到自己的資料。別人的職缺一律回 404，不讓人分辨出「存在但不是你的」。
+`/api/jobs` 與 `/api/applications` 底下的路由都需要登入（`access_token` cookie），而且只看得到自己的資料。別人的資料一律回 404，不讓人分辨出「存在但不是你的」。職缺的回應會附上 `application: { id, status } | null`。
+
+投遞狀態：`SAVED`（收藏）→ `APPLIED`（已投）→ `INTERVIEW`（面試）→ `OFFER`（錄取）／`REJECTED`（拒絕）。狀態可以任意切換，因為現實中也會被拒後又被找回去面試，歷程會如實記錄。第一次離開 `SAVED` 時，如果沒有投遞日，會自動補上當下時間。
 
 ## 驗證設計
 

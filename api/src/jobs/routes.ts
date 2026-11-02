@@ -11,8 +11,11 @@ import { jobCreateSchema, jobUpdateSchema, listQuerySchema } from "./schema.js";
 export const jobsRouter = Router();
 jobsRouter.use(requireAuth);
 
+// 回傳職缺時順便帶上投遞狀態，前端列職缺時不用再另外查
+const withApplication = { application: { select: { id: true, status: true } } } as const;
+
 async function findOwnedJob(id: string, userId: string) {
-  const job = await prisma.job.findFirst({ where: { id, userId } });
+  const job = await prisma.job.findFirst({ where: { id, userId }, include: withApplication });
   if (!job) throw new HttpError(404, "找不到這筆職缺");
   return job;
 }
@@ -33,7 +36,7 @@ jobsRouter.get("/", async (req, res) => {
     }),
   };
   const [items, total] = await prisma.$transaction([
-    prisma.job.findMany({ where, orderBy: { createdAt: "desc" }, take: limit, skip: offset }),
+    prisma.job.findMany({ where, include: withApplication, orderBy: { createdAt: "desc" }, take: limit, skip: offset }),
     prisma.job.count({ where }),
   ]);
   res.json({ items, total, limit, offset });

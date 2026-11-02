@@ -88,8 +88,21 @@ model Application {
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
   notes     Note[]
+  events    ApplicationEvent[]
 
   @@index([userId, status])
+}
+
+/// 狀態歷程：每次 status 改變記一筆，統計（漏斗、各階段花多久）都從這裡算。fromStatus 為 null 代表剛建立。
+model ApplicationEvent {
+  id            String             @id @default(cuid())
+  applicationId String
+  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  createdAt     DateTime           @default(now())
+
+  @@index([applicationId, createdAt])
 }
 
 model Note {
@@ -98,6 +111,7 @@ model Note {
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   content       String
   createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  @@index([applicationId])
+  @@index([applicationId, createdAt])
 }

@@ -126,7 +126,88 @@ check "Bob 改 Alice 的職缺 → 404" 404 "$status"
 req DELETE "/jobs/$id"
 check "Bob 刪 Alice 的職缺 → 404" 404 "$status"
 
+# ---------- 投遞追蹤（以 Alice 身分） ----------
+JAR=$(jar alice)
+req POST /applications '{"jobId":"'"$id"'"}'
+check "替職缺建立投遞（預設 SAVED）" 201 "$status"
+app=$(field id)
+[[ "$body" == *'"status":"SAVED"'* && "$body" == *'"appliedAt":null'* ]] || fail "新投遞應該是 SAVED 且沒有投遞日：$body"
+
+req POST /applications '{"jobId":"'"$id"'"}'
+check "同一個職缺再建一筆 → 409" 409 "$status"
+req POST /applications '{"jobId":"no-such-job"}'
+check "職缺不存在 → 404" 404 "$status"
+req POST /applications '{"jobId":"'"$id"'","status":"HIRED"}'
+check "不存在的狀態 → 400" 400 "$status"
+
+req GET "/jobs/$id"
+[[ "$body" == *'"application":{"id":"'"$app"'","status":"SAVED"}'* ]] || fail "職缺沒有帶上投遞狀態：$body"
+
+req PATCH "/applications/$app" '{"status":"APPLIED"}'
+check "改成已投" 200 "$status"
+[[ "$body" != *'"appliedAt":null'* ]] || fail "改成 APPLIED 應該自動補上投遞日：$body"
+req PATCH "/applications/$app" '{"status":"APPLIED"}'
+check "狀態沒變（不該多一筆歷程）" 200 "$status"
+req PATCH "/applications/$app" '{"status":"INTERVIEW"}'
+check "改成面試" 200 "$status"
+
+req POST "/applications/$app/notes" '{"content":"一面：React 狀態管理、SQL JOIN"}'
+check "新增筆記" 201 "$status"
+note=$(field id)
+req POST "/applications/$app/notes" '{"content":"   "}'
+check "空白筆記 → 400" 400 "$status"
+req PATCH "/applications/$app/notes/$note" '{"content":"一面：React 狀態管理、SQL JOIN、Docker"}'
+check "編輯筆記" 200 "$status"
+
+req GET "/applications/$app"
+check "投遞詳情" 200 "$status"
+events=$(node -e 'const a=JSON.parse(process.argv[1]);process.stdout.write(a.events.map(e=>`${e.fromStatus}>${e.toStatus}`).join(","))' "$body")
+[[ "$events" == "null>SAVED,SAVED>APPLIED,APPLIED>INTERVIEW" ]] || fail "狀態歷程不對：$events"
+[[ "$body" == *"Docker"* ]] || fail "詳情沒有帶出筆記"
+
+req GET "/applications?status=INTERVIEW"
+check "依狀態篩選" 200 "$status"
+[[ "$body" == *"$app"* && "$body" == *'"title":"全端工程師"'* ]] || fail "篩選結果不對：$body"
+req GET "/applications?status=OFFER"
+[[ "$body" == '{"items":[]}' ]] || fail "OFFER 應該沒有資料：$body"
+
+req GET /applications/stats
+check "各狀態統計" 200 "$status"
+[[ "$body" == '{"total":1,"byStatus":{"SAVED":0,"APPLIED":0,"INTERVIEW":1,"OFFER":0,"REJECTED":0}}' ]] || fail "統計不對：$body"
+
+JAR=$(jar bob)
+req GET "/applications/$app"
+check "Bob 讀 Alice 的投遞 → 404" 404 "$status"
+req PATCH "/applications/$app" '{"status":"REJECTED"}'
+check "Bob 改 Alice 的投遞狀態 → 404" 404 "$status"
+req POST "/applications/$app/notes" '{"content":"偷看"}'
+check "Bob 在 Alice 的投遞加筆記 → 404" 404 "$status"
+req DELETE "/applications/$app/notes/$note"
+check "Bob 刪 Alice 的筆記 → 404" 404 "$status"
+req POST /applications '{"jobId":"'"$id"'"}'
+check "Bob 替 Alice 的職缺建投遞 → 404" 404 "$status"
+req GET /applications/stats
+[[ "$(field total)" == "0" ]] || fail "Bob 的統計算到別人的投遞：$body"
+
+JAR=$(jar alice)
+req DELETE "/applications/$app/notes/$note"
+check "刪除筆記" 204 "$status"
+req POST /jobs '{"title":"後端工程師","company":"另一家"}'
+job2=$(field id)
+req POST /applications '{"jobId":"'"$job2"'","status":"APPLIED","appliedAt":"2026-10-01"}'
+check "建立時直接指定已投與投遞日" 201 "$status"
+app2=$(field id)
+[[ "$body" == *'"appliedAt":"2026-10-01T00:00:00.000Z"'* ]] || fail "指定的投遞日被覆蓋：$body"
+req DELETE "/jobs/$job2"
+req GET "/applications/$app2"
+check "刪除職缺時投遞一起刪除 → 404" 404 "$status"
+req DELETE "/applications/$app"
+check "刪除投遞" 204 "$status"
+req GET "/jobs/$id"
+[[ "$body" == *'"application":null'* ]] || fail "刪除投遞後職缺仍帶著投遞：$body"
+
 # ---------- 登出 ----------
+JAR=$(jar bob)
 req POST /auth/logout
 check "Bob 登出" 204 "$status"
 req GET /auth/me
