@@ -11,8 +11,8 @@ import type { Job, JobNature, RegionId, Salary } from "../../../src/shared/types
 import { requireAuth, userIdOf } from "../auth/middleware.js";
 import { prisma } from "../db.js";
 
+// 掛在 /api 底下，所以逐條路由要求登入；用 router.use(requireAuth) 會攔下所有經過的請求（排程、不存在的網址也變 401）
 export const matchRouter = Router();
-matchRouter.use(requireAuth);
 
 const resumeSchema = z.object({ content: z.string().max(20000) }).strict();
 
@@ -61,11 +61,11 @@ async function resumeOf(userId: string) {
   return r && { content: r.content, updatedAt: r.updatedAt, profile: parseResume(r.content) };
 }
 
-matchRouter.get("/resume", async (req, res) => {
+matchRouter.get("/resume", requireAuth, async (req, res) => {
   res.json((await resumeOf(userIdOf(req))) ?? { content: "", updatedAt: null, profile: null });
 });
 
-matchRouter.put("/resume", async (req, res) => {
+matchRouter.put("/resume", requireAuth, async (req, res) => {
   const { content } = resumeSchema.parse(req.body);
   const userId = userIdOf(req);
   await prisma.resume.upsert({ where: { userId }, create: { userId, content }, update: { content } });
@@ -73,7 +73,7 @@ matchRouter.put("/resume", async (req, res) => {
 });
 
 /** 自己每筆職缺的匹配結果，分數高到低；還沒填履歷時 profile 為 null、items 為空 */
-matchRouter.get("/match", async (req, res) => {
+matchRouter.get("/match", requireAuth, async (req, res) => {
   const userId = userIdOf(req);
   const resume = await resumeOf(userId);
   if (!resume || resume.content.trim() === "") {

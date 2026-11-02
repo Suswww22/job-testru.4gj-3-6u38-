@@ -19,6 +19,33 @@ model User {
   applications  Application[]
   refreshTokens RefreshToken[]
   resume        Resume?
+  digestSetting DigestSetting?
+  digests       Digest[]
+}
+
+/// 週報設定：開啟後，每週排程會用這些關鍵字到台灣就業通與 Yourator 搜尋新職缺，再用履歷評分
+model DigestSetting {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enabled   Boolean  @default(false)
+  /// 最多 3 個
+  keywords  String[] @default([])
+  /// RegionId；null 代表不限地區
+  region    String?
+  updatedAt DateTime @updatedAt
+}
+
+/// 每週一份週報。內容存成 JSON 快照（當時的職缺、分數、投遞狀態），之後資料變動也不影響已產生的週報
+model Digest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periodStart DateTime
+  periodEnd   DateTime
+  data        Json
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 /// 履歷：每人一份純文字，匹配時才解析（解析規則改了不必重新存）。刪帳號時一起刪除

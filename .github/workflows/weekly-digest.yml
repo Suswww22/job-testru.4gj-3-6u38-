@@ -1,0 +1,26 @@
+# 每週週報的排程：Render 免費方案沒有排程，改由 GitHub Actions 每週一呼叫一次 API。
+# 需要在 GitHub repo 的 Settings → Secrets and variables → Actions 新增 secret CRON_SECRET（與 Render 上的同一組）。
+# 失敗時（服務沒醒、密鑰錯誤）這個 job 會失敗，GitHub 會寄信通知 repo 擁有者。
+name: 每週週報
+
+on:
+  schedule:
+    - cron: "0 0 * * 1" # 每週一 00:00 UTC＝台灣時間 08:00
+  workflow_dispatch: # 可在 Actions 頁面手動執行
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 喚醒服務並產生週報
+        env:
+          APP_URL: ${{ vars.APP_URL || 'https://job-tracker-95kk.onrender.com' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          # 免費方案閒置 15 分鐘會休眠，先打 health 叫醒，最多等約 3 分鐘
+          for i in $(seq 1 18); do
+            curl -fsS --max-time 20 "$APP_URL/api/health" && break
+            sleep 10
+          done
+          curl -fsS --max-time 600 -X POST -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/weekly-digest"

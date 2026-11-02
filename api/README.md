@@ -10,7 +10,7 @@ cp .env.example .env
 npm run db        # 啟動開發用 Postgres（port 5433），背景執行
 npm run migrate   # 套用 prisma/migrations
 npm run dev       # API：http://localhost:3001/api
-npm run smoke     # curl 冒煙測試（70 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
+npm run smoke     # curl 冒煙測試（76 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
 npm run db:stop
 ```
 
@@ -71,6 +71,8 @@ docker compose up --build -d
 | `ApplicationEvent` | 狀態歷程：每次狀態改變記一筆（from → to、時間），統計從這裡算 |
 | `Note` | 投遞筆記（面試心得、聯絡人…） |
 | `Resume` | 履歷純文字，每人一份；匹配時才解析，刪帳號時一起刪除 |
+| `DigestSetting` | 週報設定：開關、推薦職缺的搜尋關鍵字（最多 3 個）、地區 |
+| `Digest` | 每週一份週報，內容存成 JSON 快照，之後職缺被刪或狀態改變也不影響已產生的週報 |
 
 ## API
 
@@ -102,6 +104,10 @@ docker compose up --build -d
 
 | GET | `/api/resume` | `{ content, updatedAt, profile }`；profile 是系統從履歷辨識出的技能、年資、學歷、地區、職務領域 |
 | PUT | `/api/resume` | 儲存履歷（`content`，最多 20000 字） |
+| GET／PUT | `/api/digest/settings` | 週報設定 `{ enabled, keywords, region }` |
+| GET | `/api/digests` | 最近 8 份週報，新的在前 |
+| POST | `/api/digests` | 立即產生一份（每個帳號每小時 5 次） |
+| POST | `/api/cron/weekly-digest` | 排程用：`Authorization: Bearer <CRON_SECRET>`，替所有開啟週報的使用者產生；6 天內產生過的跳過 |
 | GET | `/api/match` | 自己每筆職缺的匹配結果，分數高到低：`score`（0–100）、`matchedSkills`、`missingSkills`、`reasons` |
 
 匯入時前端把預覽交給 `POST /api/jobs`。`externalId` 是 `${source}:編號`，`(userId, externalId)` 有唯一限制，所以同一筆重複匯入會回 409。
@@ -111,6 +117,12 @@ docker compose up --build -d
 `/api/jobs` 與 `/api/applications` 底下的路由都需要登入（`access_token` cookie），而且只看得到自己的資料。別人的資料一律回 404，不讓人分辨出「存在但不是你的」。職缺的回應會附上 `application: { id, status } | null`。
 
 投遞狀態：`SAVED`（收藏）→ `APPLIED`（已投）→ `INTERVIEW`（面試）→ `OFFER`（錄取）／`REJECTED`（拒絕）。狀態可以任意切換，因為現實中也會被拒後又被找回去面試，歷程會如實記錄。第一次離開 `SAVED` 時，如果沒有投遞日，會自動補上當下時間。
+
+## 每週週報
+
+週報有三區：本週進度（從狀態歷程算）、已投遞超過 7 天沒有進展的投遞、新的推薦職缺（用設定的關鍵字搜尋台灣就業通與 Yourator，以履歷評分，40 分以上取前 5 筆；已在清單裡或最近 4 份週報推薦過的不再列出）。沒有推薦時會寫出原因，例如還沒填履歷。
+
+Render 免費方案沒有排程，改由 GitHub Actions（`.github/workflows/weekly-digest.yml`）每週一台灣時間 08:00 先叫醒服務，再帶著 `CRON_SECRET` 呼叫 `/api/cron/weekly-digest`。`CRON_SECRET` 由 Render 產生（`render.yaml` 的 `generateValue`），要複製到 GitHub repo 的 Actions secret。沒設定或少於 32 字元時，排程端點回 503。
 
 ## 驗證設計
 

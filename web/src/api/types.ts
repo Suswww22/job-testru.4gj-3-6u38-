@@ -101,6 +101,30 @@ export interface MatchItem {
   reasons: string[];
 }
 
+export interface DigestSettings {
+  enabled: boolean;
+  keywords: string[];
+  region: RegionId | null;
+}
+
+export interface DigestData {
+  progress: {
+    newTracked: number;
+    changes: { title: string; company: string; from: ApplicationStatus | null; to: ApplicationStatus; at: string }[];
+  };
+  followUps: { applicationId: string; title: string; company: string; appliedAt: string | null; idleDays: number }[];
+  topJobs: (JobInput & { externalId: string; score: number; matchedSkills: string[]; missingSkills: string[]; reasons: string[] })[];
+  notes: string[];
+}
+
+export interface Digest {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  createdAt: string;
+  data: DigestData;
+}
+
 export interface ApplicationStats {
   total: number;
   byStatus: Record<ApplicationStatus, number>;

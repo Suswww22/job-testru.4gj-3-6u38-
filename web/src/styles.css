@@ -196,6 +196,27 @@ a.badge { text-decoration: none; }
   .match-layout { grid-template-columns: 1fr; }
 }
 
+/* ---------- 週報 ---------- */
+.digest-page { max-width: 960px; }
+.digest-settings { display: grid; grid-template-columns: auto 1fr 8em auto; gap: 8px 12px; align-items: center; }
+.digest-settings .full { grid-column: 1 / -1; }
+.switch { display: flex; gap: 8px; align-items: center; white-space: nowrap; cursor: pointer; }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+.digest > summary { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; cursor: pointer; }
+.digest[open] > summary { margin-bottom: 12px; }
+.digest-body h3 { margin-bottom: 6px; }
+.digest-body section + section { padding-top: 12px; border-top: 1px solid var(--border); }
+.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.plain p, .digest-body p { margin: 0; }
+.recs li { flex-wrap: nowrap; align-items: start; }
+.recs .job-main { flex: 1; }
+.rec-score { font-variant-numeric: tabular-nums; }
+.status-text { color: var(--status); font-weight: 600; }
+@media (max-width: 720px) {
+  .digest-settings { grid-template-columns: 1fr 1fr; }
+  .digest-settings .switch, .digest-settings input:not([type]) { grid-column: 1 / -1; }
+}
+
 /* ---------- 投遞詳情 ---------- */
 .detail { max-width: 960px; }
 .segmented { display: flex; flex-wrap: wrap; gap: 6px; }

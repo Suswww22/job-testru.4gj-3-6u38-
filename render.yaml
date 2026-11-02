@@ -20,3 +20,6 @@ services:
         value: "3"
       - key: COOKIE_SECURE
         value: "true"
+      # 每週週報排程的密鑰，由 Render 產生；複製到 GitHub repo 的 Actions secret CRON_SECRET
+      - key: CRON_SECRET
+        generateValue: true

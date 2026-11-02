@@ -58,6 +58,10 @@ req GET "/import/search?source=yourator"
 check "沒登入搜尋外部職缺 → 401" 401 "$status"
 req GET /resume
 check "沒登入讀履歷 → 401" 401 "$status"
+req GET /digests
+check "沒登入讀週報 → 401" 401 "$status"
+req GET /nope
+check "不存在的 API → 404（不是 401）" 404 "$status"
 
 req POST /auth/login '{"email":"'"$alice"'","password":"wrong-password"}'
 check "密碼錯誤 → 401" 401 "$status"
@@ -194,11 +198,27 @@ check "履歷匹配" 200 "$status"
 req PUT /resume '{"content":"","extra":1}'
 check "履歷帶多餘欄位 → 400" 400 "$status"
 
+# 週報：不設關鍵字，產生時不會連外部網站
+req PUT /digest/settings '{"enabled":true,"keywords":["a","b","c","d"],"region":null}'
+check "週報關鍵字超過 3 個 → 400" 400 "$status"
+req PUT /digest/settings '{"enabled":true,"keywords":[],"region":"taoyuan"}'
+check "儲存週報設定" 200 "$status"
+req POST /digests
+check "立即產生週報" 201 "$status"
+[[ "$body" == *'"followUps":'* && "$body" == *'"changes":[{'* && "$body" == *'沒有推薦職缺'* ]] \
+  || fail "週報缺少進度、跟進或沒有推薦的原因：$body"
+req POST /cron/weekly-digest
+check "排程沒帶密鑰 → 401" 401 "$status"
+
 JAR=$(jar bob)
 req GET /resume
 [[ "$(field content)" == "" ]] || fail "Bob 讀到別人的履歷：$body"
 req GET /match
 [[ "$body" == '{"profile":null,"items":[]}' ]] || fail "Bob 的匹配結果有別人的資料：$body"
+req GET /digests
+[[ "$body" == '{"items":[]}' ]] || fail "Bob 看到別人的週報：$body"
+req GET /digest/settings
+[[ "$body" == '{"enabled":false,"keywords":[],"region":null}' ]] || fail "Bob 讀到別人的週報設定：$body"
 req GET "/applications/$app"
 check "Bob 讀 Alice 的投遞 → 404" 404 "$status"
 req PATCH "/applications/$app" '{"status":"REJECTED"}'

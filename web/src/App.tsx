@@ -3,6 +3,7 @@ import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
 import { ApplicationPage } from "./pages/ApplicationPage";
 import { BoardPage } from "./pages/BoardPage";
+import { DigestPage } from "./pages/DigestPage";
 import { JobsPage } from "./pages/JobsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MatchPage } from "./pages/MatchPage";
@@ -23,6 +24,7 @@ export function App() {
           <NavLink to="/board">投遞看板</NavLink>
           <NavLink to="/match">履歷匹配</NavLink>
           <NavLink to="/stats">統計</NavLink>
+          <NavLink to="/digest">週報</NavLink>
         </nav>
         <span className="muted user">{user.name ?? user.email}</span>
         <button className="ghost" onClick={() => logout.mutate()}>登出</button>
@@ -34,6 +36,7 @@ export function App() {
           <Route path="/applications/:id" element={<ApplicationPage />} />
           <Route path="/match" element={<MatchPage />} />
           <Route path="/stats" element={<StatsPage />} />
+          <Route path="/digest" element={<DigestPage />} />
           <Route path="*" element={<Navigate to="/board" replace />} />
         </Routes>
       </main>

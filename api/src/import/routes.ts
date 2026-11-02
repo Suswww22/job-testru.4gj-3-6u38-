@@ -7,12 +7,11 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 
 import { REGIONS } from "../../../src/shared/data.js";
-import { filterJobs } from "../../../src/shared/matcher.js";
-import type { Job, RegionId } from "../../../src/shared/types.js";
-import { ADAPTERS } from "../../../src/server/sources/index.js";
+import type { RegionId } from "../../../src/shared/types.js";
 import { requireAuth, userIdOf } from "../auth/middleware.js";
 import { prisma } from "../db.js";
 import { HttpError } from "../errors.js";
+import { IMPORT_SOURCES, searchSource, toJobInput } from "./search.js";
 
 export const importRouter = Router();
 importRouter.use(requireAuth);
@@ -21,7 +20,7 @@ const MAX_RESULTS = 50;
 const REGION_IDS = REGIONS.map((r) => r.id) as [RegionId, ...RegionId[]];
 
 const searchSchema = z.object({
-  source: z.enum(["taiwanjobs", "yourator"]),
+  source: z.enum(IMPORT_SOURCES),
   keyword: z.string().trim().max(100).default(""),
   region: z.enum(REGION_IDS).optional(),
 });
@@ -38,45 +37,14 @@ const searchLimiter = rateLimit({
   },
 });
 
-/** 爬蟲的 Job 轉成 POST /api/jobs 接受的欄位 */
-function toJobInput(j: Job) {
-  const description = [...j.duties, ...j.requirements.others].join("\n").slice(0, 20000);
-  return {
-    source: j.source,
-    externalId: j.id,
-    sourceUrl: j.sourceUrl,
-    title: j.title.slice(0, 200),
-    company: (j.company || "未提供").slice(0, 200),
-    region: j.region,
-    address: j.address.slice(0, 300),
-    nature: j.nature,
-    salaryKind: j.salary.kind,
-    salaryMin: j.salary.min,
-    // 少數來源的上限比下限小（多半是解析錯誤），只保留下限，避免匯入時被驗證擋下
-    salaryMax: j.salary.max !== null && j.salary.min !== null && j.salary.max < j.salary.min ? null : j.salary.max,
-    salaryNote: j.salary.note.slice(0, 300),
-    skills: [...j.requirements.skills].slice(0, 50),
-    tags: j.tags.filter((t) => t.trim() !== "").map((t) => t.slice(0, 50)).slice(0, 50),
-    description,
-    postedAt: /^\d{4}-\d{2}-\d{2}$/.test(j.postedAt) ? j.postedAt : null,
-  };
-}
-
 importRouter.get("/search", searchLimiter, async (req, res) => {
   const { source, keyword, region } = searchSchema.parse(req.query);
-  const adapter = ADAPTERS.get(source);
-  if (!adapter) throw new HttpError(400, "不支援的來源");
-
-  const query = { categoryId: null, subIds: new Set<string>(), regions: new Set(region ? [region] : []), keyword };
-  let found: Job[];
+  let matched;
   try {
-    found = await adapter.search(query);
+    matched = await searchSource(source, keyword, region);
   } catch (err) {
-    const reason = err instanceof Error ? err.message : "未知錯誤";
-    throw new HttpError(502, `${source === "taiwanjobs" ? "台灣就業通" : "Yourator"}暫時無法連線：${reason}`);
+    throw new HttpError(502, err instanceof Error ? err.message : "外部網站暫時無法連線");
   }
-  // 來源本身不支援關鍵字時（台灣就業通），在這裡用標題、技能、內文過濾；地區兩邊都再過濾一次
-  const matched = filterJobs(found, adapter.handlesKeyword ? { ...query, keyword: "" } : query);
   const jobs = matched.slice(0, MAX_RESULTS);
 
   const saved = await prisma.job.findMany({

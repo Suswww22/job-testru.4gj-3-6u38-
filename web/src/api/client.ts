@@ -4,8 +4,8 @@
 
 import type { RegionId, ResumeProfile } from "../../../src/shared/types";
 import type {
-  Application, ApplicationDetail, ApplicationStats, ApplicationStatus, ImportItem, ImportSource, Job, JobInput, MatchItem, Note, Page,
-  Resume, User,
+  Application, ApplicationDetail, ApplicationStats, ApplicationStatus, Digest, DigestSettings, ImportItem, ImportSource, Job, JobInput,
+  MatchItem, Note, Page, Resume, User,
 } from "./types";
 
 export class ApiError extends Error {
@@ -69,6 +69,11 @@ export const api = {
   getResume: () => request<Resume>("GET", "/resume"),
   saveResume: (content: string) => request<Resume>("PUT", "/resume", { content }),
   match: () => request<{ profile: ResumeProfile | null; items: MatchItem[] }>("GET", "/match"),
+
+  digestSettings: () => request<DigestSettings>("GET", "/digest/settings"),
+  saveDigestSettings: (s: DigestSettings) => request<DigestSettings>("PUT", "/digest/settings", s),
+  listDigests: () => request<{ items: Digest[] }>("GET", "/digests"),
+  generateDigest: () => request<Digest>("POST", "/digests"),
 
   getApplication: (id: string) => request<ApplicationDetail>("GET", `/applications/${id}`),
 
