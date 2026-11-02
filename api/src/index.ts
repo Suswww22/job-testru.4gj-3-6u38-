@@ -1,4 +1,7 @@
 import { createApp } from "./app.js";
+import { assertJwtConfigured } from "./auth/token.js";
+
+assertJwtConfigured();
 
 const PORT = Number(process.env["PORT"] ?? 3001);
 

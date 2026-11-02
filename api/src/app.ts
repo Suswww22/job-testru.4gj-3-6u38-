@@ -2,6 +2,7 @@
 
 import express from "express";
 
+import { authRouter } from "./auth/routes.js";
 import { errorHandler } from "./errors.js";
 import { jobsRouter } from "./jobs/routes.js";
 
@@ -12,6 +13,7 @@ export function createApp() {
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true });
   });
+  app.use("/api/auth", authRouter);
   app.use("/api/jobs", jobsRouter);
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: { message: "找不到這個 API" } });
