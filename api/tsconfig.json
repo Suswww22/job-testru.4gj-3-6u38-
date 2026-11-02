@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "rootDir": "..",
+    "noEmit": true,
+    // zod 產生的型別是 `?: T | undefined`，Prisma 的輸入型別不接受，兩者搭配時關閉此選項
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src/**/*.ts", "prisma/**/*.ts"]
+}

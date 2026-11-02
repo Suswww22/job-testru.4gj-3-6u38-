@@ -1,0 +1,86 @@
+// 求職追蹤平台的資料表。欄位命名沿用 src/shared/types.ts 的 Job，但只保留追蹤需要的部分。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime      @default(now())
+  jobs         Job[]
+  applications Application[]
+}
+
+model Job {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "taiwanjobs" | "yourator" | "demo" | "manual"
+  source      String       @default("manual")
+  /// 爬蟲的原始編號（`${source}:編號`），匯入時用來去重
+  externalId  String?
+  sourceUrl   String?
+  title       String
+  company     String
+  /// RegionId
+  region      String?
+  address     String       @default("")
+  /// JobNature
+  nature      String       @default("全職")
+  /// Salary.kind
+  salaryKind  String       @default("面議")
+  salaryMin   Int?
+  salaryMax   Int?
+  salaryNote  String       @default("")
+  skills      String[]     @default([])
+  tags        String[]     @default([])
+  description String       @default("")
+  postedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  application Application?
+
+  @@unique([userId, externalId])
+  @@index([userId, createdAt])
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEW
+  OFFER
+  REJECTED
+}
+
+model Application {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String            @unique
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status    ApplicationStatus @default(SAVED)
+  appliedAt DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  notes     Note[]
+
+  @@index([userId, status])
+}
+
+model Note {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  content       String
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId])
+}
