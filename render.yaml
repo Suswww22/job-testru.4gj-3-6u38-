@@ -1,0 +1,21 @@
+# Render Blueprint：在 Render 選 New → Blueprint，指向這個 repo 就會照這份建立服務。
+# 資料庫用 Neon（Render 免費資料庫 30 天後會到期），連線網址部署時在 Render 畫面上填。
+services:
+  - type: web
+    name: job-tracker
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      # Neon 的連線網址（非 pooled 版本，結尾要有 ?sslmode=require）
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      # Render 的負載平衡器在前面
+      - key: TRUST_PROXY
+        value: "1"
+      - key: COOKIE_SECURE
+        value: "true"

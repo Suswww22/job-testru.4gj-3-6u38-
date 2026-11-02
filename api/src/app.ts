@@ -1,5 +1,7 @@
 // 組裝 Express app（與 listen 分開，之後 Vitest + supertest 可以直接拿 app 測試，不用真的開 port）。
 
+import path from "node:path";
+
 import cookieParser from "cookie-parser";
 import express from "express";
 
@@ -26,6 +28,21 @@ export function createApp() {
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: { message: "找不到這個 API" } });
   });
+
+  // 單一容器部署（Render）時由 API 一併送出前端，前後端同一個網址，SameSite=Strict 的 cookie 才帶得上。
+  // docker compose 由 nginx 送前端，不設 WEB_DIST
+  if (process.env["WEB_DIST"]) {
+    const webDist = path.resolve(process.env["WEB_DIST"]);
+    // 檔名帶雜湊，內容變了檔名就變，可以長期快取
+    app.use("/assets", express.static(path.join(webDist, "assets"), { immutable: true, maxAge: "1y" }));
+    app.use(express.static(webDist, { index: false }));
+    // 其餘路徑（/board、/applications/:id…）都回 index.html 交給 React Router；不快取，部署新版才會立刻生效
+    app.get(/.*/, (_req, res) => {
+      res.setHeader("Cache-Control", "no-cache");
+      // 用 root＋相對檔名：sendFile 預設拒絕路徑裡有「.」開頭的資料夾，用 root 時只檢查 root 之後的部分
+      res.sendFile("index.html", { root: webDist });
+    });
+  }
 
   app.use(errorHandler);
   return app;

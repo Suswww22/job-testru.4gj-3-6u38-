@@ -44,6 +44,18 @@ docker compose up --build -d
 
 不用 Docker 也能跑正式版：`npm run build && npm run start:prod`。
 
+## 部署到 Render（＋ Neon 資料庫）
+
+用 `job-finder/Dockerfile`（單一容器版）：API 同時送出前端靜態檔（環境變數 `WEB_DIST`），整個網站只有一個網址。不拆成前端、後端兩個服務的原因是 `*.onrender.com` 的每個子網域對瀏覽器來說都是不同網站，`SameSite=Strict` 的 cookie 不會跨過去，登入會失效。
+
+容器啟動時先跑 `prisma migrate deploy` 再開 API（免費方案沒有獨立的部署前步驟），所以 `prisma` CLI 放在正式依賴。
+
+1. 在 Neon 建立專案（區域選 Singapore），複製**非 pooled** 的連線網址（結尾有 `?sslmode=require`）。
+2. 在 Render 選 New → Blueprint，指向 repo，它會照 `render.yaml` 建立服務；`DATABASE_URL` 貼上 Neon 的網址，`JWT_SECRET` 由 Render 自動產生。
+3. 之後推到 main 就會自動重新部署。
+
+免費方案閒置 15 分鐘會休眠，下一次開啟要等大約一分鐘。
+
 ## 資料表
 
 | 表 | 用途 |
