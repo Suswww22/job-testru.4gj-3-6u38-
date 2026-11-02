@@ -6,9 +6,11 @@ import { readFile } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { COUNTIES, LEVELS, REMOTE, ROLES, type AgentQuery, type Level, type RoleId } from "../shared/agent.js";
 import { DEMO_JOBS, REGIONS, SOURCES } from "../shared/data.js";
 import { filterJobs } from "../shared/matcher.js";
 import type { Job, RegionId, SearchQuery, SearchResponse, SourceId } from "../shared/types.js";
+import { searchAgent } from "./agent.js";
 import { ADAPTERS } from "./sources/index.js";
 import { loadDashboard, saveConfig } from "./tracker/dashboard.js";
 
@@ -93,6 +95,20 @@ function interleave(lists: readonly (readonly Job[])[], limit: number): Job[] {
   return out;
 }
 
+const ROLE_IDS = new Set<string>(ROLES.map((r) => r.id));
+const LEVEL_IDS = new Set<string>(LEVELS.map((l) => l.id));
+const COUNTY_NAMES = new Set<string>([...COUNTIES.map((c) => c.name), REMOTE]);
+
+async function handleAgent(params: URLSearchParams, res: ServerResponse): Promise<void> {
+  const query: AgentQuery = {
+    roles: list(params, "roles").filter((r): r is RoleId => ROLE_IDS.has(r)),
+    counties: list(params, "counties").filter((c) => COUNTY_NAMES.has(c)),
+    levels: list(params, "levels").filter((l): l is Level => LEVEL_IDS.has(l)),
+    keyword: (params.get("q") ?? "").slice(0, 100),
+  };
+  sendJson(res, 200, await searchAgent(query));
+}
+
 async function handleDetail(params: URLSearchParams, res: ServerResponse): Promise<void> {
   const source = params.get("source") ?? "";
   const url = params.get("url") ?? "";
@@ -165,6 +181,7 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
     case "/api/sources": return sendJson(res, 200, SOURCES);
     case "/api/jobs": return handleSearch(url.searchParams, res);
     case "/api/job": return handleDetail(url.searchParams, res);
+    case "/api/agent": return handleAgent(url.searchParams, res);
     case "/api/tracker": return sendJson(res, 200, await loadDashboard());
     default: return serveStatic(url.pathname, res);
   }

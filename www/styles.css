@@ -369,3 +369,33 @@ dialog[open] { animation: slide-in .2s ease-out; }
   .jobs { grid-template-columns: 1fr; }
   .nav a { padding: 6px 8px; }
 }
+
+/* ---------- 工程師求職 Agent ---------- */
+.county-groups { display: grid; gap: 10px; }
+.county-group { display: grid; grid-template-columns: 72px 1fr; gap: 8px; align-items: start; }
+.county-group__name { font-size: 13px; color: var(--muted); padding-top: 6px; }
+.chip:disabled, .btn:disabled { opacity: .6; cursor: progress; }
+.agent-notes { margin: 0 0 12px; padding-left: 18px; font-size: 13px; }
+.agent-card { display: block; }
+.agent-card:hover { transform: none; }
+.agent-card summary { list-style: none; cursor: pointer; }
+.agent-card summary::-webkit-details-marker { display: none; }
+.agent-card[open] { border-color: var(--accent); }
+.agent-detail {
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px;
+}
+.agent-sec h4 { margin: 0 0 6px; font-size: 14px; color: var(--muted); font-weight: 500; }
+.agent-sec p { margin: 0 0 4px; }
+.agent-sec ul { margin: 0; padding-left: 18px; }
+.agent-detail > .btn { justify-self: start; align-self: end; text-decoration: none; }
+.agent-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.agent-links a { color: var(--accent); }
+.changes { list-style: none; padding: 0 !important; display: grid; gap: 8px; }
+.changes li { display: grid; gap: 2px; font-size: 14px; }
+.changes__head { font-weight: 500; color: var(--warn); }
+.changes del { color: var(--muted); }
+.changes ins { text-decoration: none; }
+@media (max-width: 600px) {
+  .field, .county-group { grid-template-columns: 1fr; gap: 6px; }
+}

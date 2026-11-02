@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>工程師求職 Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app/agent.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <span class="logo">職缺雷達</span>
+      <nav class="nav">
+        <a href="index.html">職缺搜尋</a>
+        <a href="agent.html" aria-current="page">工程師 Agent</a>
+        <a href="tracker.html">職缺追蹤</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>工程師求職 Agent</h1>
+      <form id="agent-form" class="panel search" autocomplete="off">
+        <div class="field">
+          <span class="field__label">職類</span>
+          <div id="role-chips" class="chips"></div>
+        </div>
+        <div class="field">
+          <span class="field__label">地區</span>
+          <div id="county-groups" class="county-groups"></div>
+        </div>
+        <div class="field">
+          <span class="field__label">資歷</span>
+          <div id="level-chips" class="chips"></div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="keyword">職稱</label>
+          <div class="search__row">
+            <input id="keyword" type="search" placeholder="例如 React、Python、資深">
+            <button id="agent-run" type="submit" class="btn btn--primary">開始搜尋</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section id="results" class="results" hidden>
+      <div class="results__bar">
+        <h2 id="result-count"></h2>
+        <label class="sort">
+          排序
+          <select id="sort-select">
+            <option value="changed">條件變動優先</option>
+            <option value="latest">最新刊登</option>
+            <option value="salary">薪資高到低</option>
+          </select>
+        </label>
+      </div>
+      <ul id="agent-notes" class="agent-notes muted"></ul>
+      <div id="job-list" class="job-list"></div>
+    </section>
+  </main>
+</body>
+</html>

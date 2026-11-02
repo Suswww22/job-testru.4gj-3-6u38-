@@ -109,9 +109,13 @@ async function load(params: string): Promise<Job[]> {
   return parseXml(xml).map(toJob).filter((j): j is Job => j !== null);
 }
 
-/** 依郵遞區號逐區抓取；不同區號可能回傳同一筆職缺，會去除重複 */
-export async function loadByZips(zips: readonly string[], perZip: number): Promise<Job[]> {
-  const settled = await mapLimit(zips, CONCURRENCY, (z) => load(`zipno=${z}&count=${perZip}`));
+/**
+ * 依郵遞區號逐區抓取；不同區號可能回傳同一筆職缺，會去除重複。
+ * jobno：職務代碼前綴（例如 08 = 資訊軟體類）。不帶區號時 API 只回傳部分樣本，所以要搭配區號。
+ */
+export async function loadByZips(zips: readonly string[], perZip: number, jobno = ""): Promise<Job[]> {
+  const extra = jobno ? `&jobno=${jobno}` : "";
+  const settled = await mapLimit(zips, CONCURRENCY, (z) => load(`zipno=${z}&count=${perZip}${extra}`));
   const ok = settled.flatMap((s) => (s.status === "fulfilled" ? s.value : []));
   const failed = settled.find((s): s is PromiseRejectedResult => s.status === "rejected");
   if (ok.length === 0 && failed) {
