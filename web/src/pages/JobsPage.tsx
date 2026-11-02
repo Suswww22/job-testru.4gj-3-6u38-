@@ -5,8 +5,10 @@ import { REGIONS } from "../../../src/shared/data";
 import type { RegionId } from "../../../src/shared/types";
 import { api, ApiError } from "../api/client";
 import { STATUSES, type Job } from "../api/types";
+import { ImportPanel } from "./ImportPanel";
 
 const regionName = (id: RegionId | null) => REGIONS.find((r) => r.id === id)?.name ?? "";
+const SOURCE_NAMES: Record<string, string> = { taiwanjobs: "台灣就業通", yourator: "Yourator" };
 const statusLabel = (id: string) => STATUSES.find((s) => s.id === id)?.label ?? id;
 
 export function salaryText(job: Pick<Job, "salaryKind" | "salaryMin" | "salaryMax">): string {
@@ -22,6 +24,7 @@ export function JobsPage() {
   const [q, setQ] = useState("");
   const query = useDeferredValue(q.trim());
   const jobs = useQuery({ queryKey: ["jobs", query], queryFn: () => api.listJobs(query) });
+  const [mode, setMode] = useState<"import" | "manual">("import");
 
   // 職缺與投遞互相影響（加入追蹤、刪職缺會連帶刪投遞），一起重新抓
   const refresh = () => qc.invalidateQueries({ predicate: (k) => ["jobs", "applications"].includes(String(k.queryKey[0])) });
@@ -35,7 +38,14 @@ export function JobsPage() {
         <input className="search" type="search" placeholder="搜尋職稱、公司、技能" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
-      <NewJobForm onCreated={refresh} />
+      <div className="tabs add-mode" role="tablist" aria-label="新增職缺的方式">
+        {(["import", "manual"] as const).map((m) => (
+          <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)}>
+            {m === "import" ? "從網站匯入" : "手動新增"}
+          </button>
+        ))}
+      </div>
+      {mode === "import" ? <ImportPanel onImported={refresh} /> : <NewJobForm onCreated={refresh} />}
 
       {jobs.isPending && <p className="muted">載入中…</p>}
       {jobs.isError && <p className="error">讀取失敗：{jobs.error.message}</p>}
@@ -46,7 +56,9 @@ export function JobsPage() {
           <li key={job.id} className="card job">
             <div className="job-main">
               <strong>{job.sourceUrl ? <a href={job.sourceUrl} target="_blank" rel="noreferrer">{job.title}</a> : job.title}</strong>
-              <span className="muted">{[job.company, regionName(job.region), salaryText(job)].filter(Boolean).join(" · ")}</span>
+              <span className="muted">
+                {[job.company, regionName(job.region), salaryText(job), SOURCE_NAMES[job.source]].filter(Boolean).join(" · ")}
+              </span>
               {job.skills.length > 0 && (
                 <span className="chips">{job.skills.map((s) => <span key={s} className="chip">{s}</span>)}</span>
               )}

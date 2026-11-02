@@ -13,6 +13,7 @@ RUN npm ci
 # 根目錄的 package.json 寫著 "type": "module"：少了它，tsc 會把 src/shared 編成 CommonJS，API 啟動時 import 不到
 COPY package.json tsconfig.base.json /app/
 COPY src/shared /app/src/shared
+COPY src/server /app/src/server
 COPY api/ ./
 RUN npx prisma generate && npm run build
 

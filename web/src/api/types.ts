@@ -44,6 +44,10 @@ export interface Job {
 
 export type JobInput = Partial<Omit<Job, "id" | "createdAt" | "updatedAt" | "application">> & Pick<Job, "title" | "company">;
 
+/** 外部網站搜尋結果：已轉成 POST /api/jobs 的欄位，saved 表示已在自己的清單裡 */
+export type ImportItem = JobInput & { externalId: string; saved: boolean };
+export type ImportSource = "taiwanjobs" | "yourator";
+
 export interface Page<T> {
   items: T[];
   total: number;

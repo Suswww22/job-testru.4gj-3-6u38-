@@ -54,6 +54,8 @@ check "同 email（大小寫不同）重複註冊 → 409" 409 "$status"
 JAR=$(jar anon)
 req GET /jobs
 check "沒帶 cookie → 401" 401 "$status"
+req GET "/import/search?source=yourator"
+check "沒登入搜尋外部職缺 → 401" 401 "$status"
 
 req POST /auth/login '{"email":"'"$alice"'","password":"wrong-password"}'
 check "密碼錯誤 → 401" 401 "$status"
@@ -91,6 +93,9 @@ check "重新登入 Alice" 200 "$status"
 req POST /jobs '{"title":"全端工程師","company":"範例科技","region":"taoyuan","salaryKind":"月薪","salaryMin":55000,"salaryMax":75000,"skills":["React","Node.js","PostgreSQL"]}'
 check "新增職缺" 201 "$status"
 id=$(field id)
+
+req GET "/import/search?source=104"
+check "不支援的外部來源 → 400" 400 "$status"
 
 req GET "/jobs?q=React&region=taoyuan"
 check "搜尋（技能＋地區）" 200 "$status"

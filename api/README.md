@@ -10,7 +10,7 @@ cp .env.example .env
 npm run db        # 啟動開發用 Postgres（port 5433），背景執行
 npm run migrate   # 套用 prisma/migrations
 npm run dev       # API：http://localhost:3001/api
-npm run smoke     # curl 冒煙測試（64 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
+npm run smoke     # curl 冒煙測試（66 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
 npm run db:stop
 ```
 
@@ -97,6 +97,9 @@ docker compose up --build -d
 | POST | `/api/applications/:id/notes` | 新增筆記 |
 | PATCH | `/api/applications/:id/notes/:noteId` | 編輯筆記 |
 | DELETE | `/api/applications/:id/notes/:noteId` | 刪除筆記 |
+| GET | `/api/import/search?source=taiwanjobs\|yourator&keyword=&region=` | 搜尋外部網站的職缺（沿用 `../src/server/sources` 的爬蟲），回傳已轉成 `POST /api/jobs` 欄位的預覽與 `saved`；不寫入資料庫。每個帳號 10 分鐘 20 次 |
+
+匯入時前端把預覽交給 `POST /api/jobs`。`externalId` 是 `${source}:編號`，`(userId, externalId)` 有唯一限制，所以同一筆重複匯入會回 409。
 
 `/api/jobs` 與 `/api/applications` 底下的路由都需要登入（`access_token` cookie），而且只看得到自己的資料。別人的資料一律回 404，不讓人分辨出「存在但不是你的」。職缺的回應會附上 `application: { id, status } | null`。
 

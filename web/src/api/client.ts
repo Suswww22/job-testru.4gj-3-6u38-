@@ -2,7 +2,10 @@
 // access token 15 分鐘就過期；收到 401 時先打 /auth/refresh 換新的再重試一次。
 // 同時有多個請求過期時只換一次：refresh token 會輪替，重複換會被後端當成外洩而整個登出。
 
-import type { Application, ApplicationDetail, ApplicationStats, ApplicationStatus, Job, JobInput, Note, Page, User } from "./types";
+import type { RegionId } from "../../../src/shared/types";
+import type {
+  Application, ApplicationDetail, ApplicationStats, ApplicationStatus, ImportItem, ImportSource, Job, JobInput, Note, Page, User,
+} from "./types";
 
 export class ApiError extends Error {
   constructor(readonly status: number, message: string, readonly details?: unknown) {
@@ -50,6 +53,11 @@ export const api = {
   listJobs: (q = "") => request<Page<Job>>("GET", `/jobs?limit=100${q ? `&q=${encodeURIComponent(q)}` : ""}`),
   createJob: (input: JobInput) => request<Job>("POST", "/jobs", input),
   deleteJob: (id: string) => request<void>("DELETE", `/jobs/${id}`),
+  searchImport: (q: { source: ImportSource; keyword: string; region: RegionId | "" }) =>
+    request<{ total: number; items: ImportItem[] }>(
+      "GET",
+      `/import/search?${new URLSearchParams({ source: q.source, keyword: q.keyword, ...(q.region ? { region: q.region } : {}) })}`,
+    ),
 
   listApplications: () => request<{ items: Application[] }>("GET", "/applications"),
   applicationStats: () => request<ApplicationStats>("GET", "/applications/stats"),
