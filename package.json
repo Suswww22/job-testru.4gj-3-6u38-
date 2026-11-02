@@ -1,0 +1,18 @@
+{
+  "name": "job-finder",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "職缺搜尋與履歷 AI 匹配網頁（TypeScript）",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.server.json",
+    "start": "node --use-system-ca build/server/server.js",
+    "dev": "npm run build && npm start",
+    "track": "node --use-system-ca build/server/tracker/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "5.6.3"
+  }
+}

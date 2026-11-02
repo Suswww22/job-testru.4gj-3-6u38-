@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>職缺雷達</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app/main.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <span class="logo">職缺雷達</span>
+      <nav class="nav">
+        <a href="index.html" aria-current="page">職缺搜尋</a>
+        <a href="tracker.html">職缺追蹤</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>找到下一份好工作</h1>
+
+      <form id="search-form" class="panel search" autocomplete="off">
+        <div class="field">
+          <span class="field__label">來源</span>
+          <div id="source-chips" class="chips"></div>
+        </div>
+        <div class="field">
+          <span class="field__label">職務類別</span>
+          <div id="cat-chips" class="chips"></div>
+        </div>
+        <div id="sub-row" class="field" hidden>
+          <span class="field__label">細項</span>
+          <div id="sub-chips" class="chips"></div>
+        </div>
+        <div class="field">
+          <span class="field__label">地區</span>
+          <div id="region-chips" class="chips"></div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="keyword">關鍵字</label>
+          <div class="search__row">
+            <input id="keyword" type="search" placeholder="職稱、公司、技能，例如 React 遠端">
+            <button type="submit" class="btn btn--primary">搜尋職缺</button>
+          </div>
+        </div>
+      </form>
+
+      <section class="panel resume" aria-labelledby="resume-title">
+        <h2 id="resume-title">上傳履歷，讓 AI 幫你配對</h2>
+        <div class="resume__grid">
+          <label id="resume-drop" class="drop">
+            <input id="resume-file" type="file" accept=".pdf,.docx,.txt,.md">
+            <span class="drop__icon" aria-hidden="true">⇪</span>
+            <span>拖曳或點擊上傳</span>
+            <span class="muted">PDF・Word・TXT</span>
+          </label>
+          <div class="resume__paste">
+            <textarea id="resume-text" rows="6" placeholder="或直接貼上履歷內容…"></textarea>
+            <div class="resume__actions">
+              <button id="resume-run" type="button" class="btn btn--primary">開始匹配</button>
+              <button id="resume-clear" type="button" class="btn" hidden>清除履歷</button>
+              <span id="resume-status" class="status" role="status"></span>
+            </div>
+          </div>
+        </div>
+        <div id="resume-profile" class="profile" hidden></div>
+      </section>
+    </section>
+
+    <section id="results" class="results" hidden>
+      <div class="results__bar">
+        <h2 id="result-count"></h2>
+        <label class="sort">
+          排序
+          <select id="sort-select">
+            <option value="match" disabled>AI 匹配度</option>
+            <option value="latest" selected>最新刊登</option>
+            <option value="salary">薪資高到低</option>
+            <option value="rating">員工評價</option>
+          </select>
+        </label>
+      </div>
+      <div id="source-errors" class="source-errors" role="alert" hidden></div>
+      <div id="job-list" class="job-list"></div>
+    </section>
+  </main>
+
+  <dialog id="job-dialog" aria-labelledby="dialog-title">
+    <button id="dialog-close" type="button" class="dialog-close" aria-label="關閉">×</button>
+    <div id="dialog-body" class="dialog-body"></div>
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 工程師職缺追蹤器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app/tracker.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <span class="logo">職缺雷達</span>
+      <nav class="nav">
+        <a href="index.html">職缺搜尋</a>
+        <a href="tracker.html" aria-current="page">職缺追蹤</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap tracker">
+    <div class="tracker__head">
+      <div>
+        <h1>AI 工程師職缺追蹤器</h1>
+        <p id="report-meta" class="muted"></p>
+      </div>
+      <button id="open-config" type="button" class="btn">追蹤條件</button>
+    </div>
+
+    <p id="load-error" class="source-errors" role="alert" hidden></p>
+    <div id="dashboard"></div>
+  </main>
+
+  <dialog id="config-dialog" aria-labelledby="config-title">
+    <button id="config-close" type="button" class="dialog-close" aria-label="關閉">×</button>
+    <form id="config-form" class="dialog-body config" autocomplete="off">
+      <h2 id="config-title">追蹤條件</h2>
+      <div class="field">
+        <span class="field__label">地區</span>
+        <div id="cfg-location" class="chips"></div>
+      </div>
+      <div class="field">
+        <span class="field__label">資歷</span>
+        <div id="cfg-seniority" class="chips"></div>
+      </div>
+      <div class="field">
+        <span class="field__label">職稱</span>
+        <div id="cfg-keywords" class="chips"></div>
+      </div>
+      <div class="field">
+        <label class="field__label" for="cfg-sites">網站</label>
+        <input id="cfg-sites" type="search" placeholder="104, 1111, LinkedIn, CakeResume, Indeed（留空＝全部）">
+      </div>
+      <div class="field">
+        <label class="field__label" for="cfg-salary">月薪下限</label>
+        <input id="cfg-salary" type="number" min="1" step="1000" placeholder="不限">
+      </div>
+      <div class="field">
+        <label class="field__label" for="cfg-exclude">排除公司</label>
+        <input id="cfg-exclude" type="search" placeholder="以逗號分隔">
+      </div>
+      <div class="field">
+        <label class="field__label" for="cfg-notes">額外條件</label>
+        <textarea id="cfg-notes" rows="3" placeholder="公司規模、產業等"></textarea>
+      </div>
+      <div class="config__actions">
+        <button type="submit" class="btn btn--primary">儲存</button>
+        <span id="cfg-status" class="status" role="status"></span>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
