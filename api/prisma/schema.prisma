@@ -18,6 +18,15 @@ model User {
   jobs          Job[]
   applications  Application[]
   refreshTokens RefreshToken[]
+  resume        Resume?
+}
+
+/// 履歷：每人一份純文字，匹配時才解析（解析規則改了不必重新存）。刪帳號時一起刪除
+model Resume {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  updatedAt DateTime @updatedAt
 }
 
 /// 登入階段。cookie 裡放隨機字串，這裡只存它的 SHA-256；每次換發就作廢舊的、發新的（同一個 familyId）。

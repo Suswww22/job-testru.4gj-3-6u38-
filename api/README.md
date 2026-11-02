@@ -10,7 +10,7 @@ cp .env.example .env
 npm run db        # 啟動開發用 Postgres（port 5433），背景執行
 npm run migrate   # 套用 prisma/migrations
 npm run dev       # API：http://localhost:3001/api
-npm run smoke     # curl 冒煙測試（66 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
+npm run smoke     # curl 冒煙測試（70 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
 npm run db:stop
 ```
 
@@ -70,6 +70,7 @@ docker compose up --build -d
 | `Application` | 投遞狀態：SAVED → APPLIED → INTERVIEW → OFFER / REJECTED，一個職缺一筆 |
 | `ApplicationEvent` | 狀態歷程：每次狀態改變記一筆（from → to、時間），統計從這裡算 |
 | `Note` | 投遞筆記（面試心得、聯絡人…） |
+| `Resume` | 履歷純文字，每人一份；匹配時才解析，刪帳號時一起刪除 |
 
 ## API
 
@@ -99,7 +100,13 @@ docker compose up --build -d
 | DELETE | `/api/applications/:id/notes/:noteId` | 刪除筆記 |
 | GET | `/api/import/search?source=taiwanjobs\|yourator&keyword=&region=` | 搜尋外部網站的職缺（沿用 `../src/server/sources` 的爬蟲），回傳已轉成 `POST /api/jobs` 欄位的預覽與 `saved`；不寫入資料庫。每個帳號 10 分鐘 20 次 |
 
+| GET | `/api/resume` | `{ content, updatedAt, profile }`；profile 是系統從履歷辨識出的技能、年資、學歷、地區、職務領域 |
+| PUT | `/api/resume` | 儲存履歷（`content`，最多 20000 字） |
+| GET | `/api/match` | 自己每筆職缺的匹配結果，分數高到低：`score`（0–100）、`matchedSkills`、`missingSkills`、`reasons` |
+
 匯入時前端把預覽交給 `POST /api/jobs`。`externalId` 是 `${source}:編號`，`(userId, externalId)` 有唯一限制，所以同一筆重複匯入會回 409。
+
+匹配沿用 `../src/shared/matcher.ts` 的規則式評分：分數 = 適配度（技能 65 ＋ 職務領域 35）× 資格係數（年資、學歷、地區不符時打折，符合時不加分）。資料表沒有年資、學歷、職務分類欄位，匹配時用同一套函式從職稱與描述解析；技能也用字典重新辨識，手動輸入的「react」才對得上履歷裡的「React」。
 
 `/api/jobs` 與 `/api/applications` 底下的路由都需要登入（`access_token` cookie），而且只看得到自己的資料。別人的資料一律回 404，不讓人分辨出「存在但不是你的」。職缺的回應會附上 `application: { id, status } | null`。
 

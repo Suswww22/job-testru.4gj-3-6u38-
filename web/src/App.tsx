@@ -5,6 +5,7 @@ import { ApplicationPage } from "./pages/ApplicationPage";
 import { BoardPage } from "./pages/BoardPage";
 import { JobsPage } from "./pages/JobsPage";
 import { LoginPage } from "./pages/LoginPage";
+import { MatchPage } from "./pages/MatchPage";
 import { StatsPage } from "./pages/StatsPage";
 
 export function App() {
@@ -20,6 +21,7 @@ export function App() {
         <nav>
           <NavLink to="/jobs">職缺</NavLink>
           <NavLink to="/board">投遞看板</NavLink>
+          <NavLink to="/match">履歷匹配</NavLink>
           <NavLink to="/stats">統計</NavLink>
         </nav>
         <span className="muted user">{user.name ?? user.email}</span>
@@ -30,6 +32,7 @@ export function App() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/board" element={<BoardPage />} />
           <Route path="/applications/:id" element={<ApplicationPage />} />
+          <Route path="/match" element={<MatchPage />} />
           <Route path="/stats" element={<StatsPage />} />
           <Route path="*" element={<Navigate to="/board" replace />} />
         </Routes>

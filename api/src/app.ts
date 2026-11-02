@@ -10,6 +10,7 @@ import { authRouter } from "./auth/routes.js";
 import { errorHandler } from "./errors.js";
 import { importRouter } from "./import/routes.js";
 import { jobsRouter } from "./jobs/routes.js";
+import { matchRouter } from "./match/routes.js";
 
 export function createApp() {
   const app = express();
@@ -27,6 +28,7 @@ export function createApp() {
   app.use("/api/jobs", jobsRouter);
   app.use("/api/applications", applicationsRouter);
   app.use("/api/import", importRouter);
+  app.use("/api", matchRouter); // /api/resume、/api/match
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: { message: "找不到這個 API" } });
   });

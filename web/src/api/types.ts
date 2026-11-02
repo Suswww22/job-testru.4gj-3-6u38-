@@ -1,6 +1,6 @@
 // API 回應的型別。列舉值沿用 src/shared，與後端驗證規則同一份來源。
 
-import type { JobNature, RegionId, Salary } from "../../../src/shared/types";
+import type { JobNature, RegionId, ResumeProfile, Salary } from "../../../src/shared/types";
 
 export type ApplicationStatus = "SAVED" | "APPLIED" | "INTERVIEW" | "OFFER" | "REJECTED";
 
@@ -84,6 +84,21 @@ export interface ApplicationDetail extends Omit<Application, "job" | "_count"> {
   job: Job;
   notes: Note[];
   events: ApplicationEvent[];
+}
+
+export interface Resume {
+  content: string;
+  updatedAt: string | null;
+  profile: ResumeProfile | null;
+}
+
+export interface MatchItem {
+  job: Pick<Job, "id" | "title" | "company" | "region" | "sourceUrl" | "salaryKind" | "salaryMin" | "salaryMax" | "application">;
+  /** 0–100 */
+  score: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  reasons: string[];
 }
 
 export interface ApplicationStats {

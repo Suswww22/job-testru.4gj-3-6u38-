@@ -56,6 +56,8 @@ req GET /jobs
 check "沒帶 cookie → 401" 401 "$status"
 req GET "/import/search?source=yourator"
 check "沒登入搜尋外部職缺 → 401" 401 "$status"
+req GET /resume
+check "沒登入讀履歷 → 401" 401 "$status"
 
 req POST /auth/login '{"email":"'"$alice"'","password":"wrong-password"}'
 check "密碼錯誤 → 401" 401 "$status"
@@ -183,7 +185,20 @@ req PATCH "/applications/$app" '{"status":"REJECTED"}'
 req GET /applications/stats
 [[ "$body" == *'"REJECTED":1'* && "$body" == *'"interview":1'* ]] || fail "面試後被拒仍要算進漏斗的面試關：$body"
 
+req PUT /resume '{"content":"全端工程師，3 年 React、Node.js 與 PostgreSQL 開發經驗，住桃園"}'
+check "儲存履歷" 200 "$status"
+[[ "$body" == *'"React"'* && "$body" == *'"years":3'* && "$body" == *'"taoyuan"'* ]] || fail "履歷沒有解析出技能、年資或地區：$body"
+req GET /match
+check "履歷匹配" 200 "$status"
+[[ "$body" == *"\"id\":\"$id\""* && "$body" == *'"score":'* && "$body" == *'"React"'* ]] || fail "匹配結果沒有 Alice 的職缺或符合的技能：$body"
+req PUT /resume '{"content":"","extra":1}'
+check "履歷帶多餘欄位 → 400" 400 "$status"
+
 JAR=$(jar bob)
+req GET /resume
+[[ "$(field content)" == "" ]] || fail "Bob 讀到別人的履歷：$body"
+req GET /match
+[[ "$body" == '{"profile":null,"items":[]}' ]] || fail "Bob 的匹配結果有別人的資料：$body"
 req GET "/applications/$app"
 check "Bob 讀 Alice 的投遞 → 404" 404 "$status"
 req PATCH "/applications/$app" '{"status":"REJECTED"}'
