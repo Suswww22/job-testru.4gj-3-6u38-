@@ -15,8 +15,25 @@ model User {
   passwordHash String
   name         String?
   createdAt    DateTime      @default(now())
-  jobs         Job[]
-  applications Application[]
+  jobs          Job[]
+  applications  Application[]
+  refreshTokens RefreshToken[]
+}
+
+/// 登入階段。cookie 裡放隨機字串，這裡只存它的 SHA-256；每次換發就作廢舊的、發新的（同一個 familyId）。
+/// 已作廢的 token 又被拿來用，代表可能外洩，整個 family 一起作廢。
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId  String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
 }
 
 model Job {
