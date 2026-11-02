@@ -10,6 +10,8 @@
     "migrate": "prisma migrate dev",
     "dev": "tsx watch --env-file=.env src/index.ts",
     "start": "tsx --env-file=.env src/index.ts",
+    "build": "tsc --noEmit false --outDir dist",
+    "start:prod": "node --env-file=.env dist/api/src/index.js",
     "smoke": "bash scripts/smoke.sh",
     "typecheck": "tsc --noEmit"
   },

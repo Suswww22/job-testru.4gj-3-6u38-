@@ -1,0 +1,72 @@
+# 求職追蹤平台：docker compose up --build 之後打開 http://localhost:8080
+# 啟動順序：db 健康 → migrate 跑完資料表遷移 → api 健康 → web。資料庫不對外開 port，只有 web 對外。
+
+name: job-tracker
+
+x-database-url: &database-url postgresql://postgres:${POSTGRES_PASSWORD:?請在 .env 設定 POSTGRES_PASSWORD}@db:5432/jobtracker
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: jobtracker
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jobtracker"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # 一次性工作：套用 prisma/migrations，跑完就結束
+  migrate:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+      target: build
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: *database-url
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      DATABASE_URL: *database-url
+      JWT_SECRET: ${JWT_SECRET:?請在 .env 設定 JWT_SECRET（至少 32 字元）}
+      PORT: 3001
+      # 前面隔一層 nginx
+      TRUST_PROXY: 1
+      # 本機用 http 跑，cookie 不能限定 HTTPS；部署到 HTTPS 時改成 true
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:

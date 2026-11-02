@@ -1,0 +1,7 @@
+**/node_modules
+**/dist
+**/.env
+build
+tracker-data
+www
+.git

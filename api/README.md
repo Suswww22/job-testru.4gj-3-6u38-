@@ -19,6 +19,31 @@ npm run db:stop
 - initdb 不接受含中文的路徑，所以執行檔和資料都放在 `%LOCALAPPDATA%\job-tracker`。
 - postgres 不能用系統管理員權限的帳號直接執行，所以改由 `pg_ctl` 降低權限後再啟動。
 
+## 用 Docker 跑整套（資料庫＋API＋前端）
+
+在 `job-finder/` 執行：
+
+```bash
+cp .env.example .env   # 填入 POSTGRES_PASSWORD 與 JWT_SECRET（openssl rand -hex 32）
+docker compose up --build -d
+```
+
+打開 http://localhost:8080。`compose.yaml` 有四個服務，依序啟動：
+
+| 服務 | 內容 |
+| --- | --- |
+| `db` | Postgres 17，資料存在 `db-data` volume，不對外開 port |
+| `migrate` | 跑一次 `prisma migrate deploy` 就結束 |
+| `api` | 編譯好的 JS（`npm run build` → `dist/`），不帶 TypeScript、tsx 與開發依賴，以非 root 使用者執行 |
+| `web` | nginx：送出前端靜態檔，並把 `/api` 轉給 `api`，瀏覽器看到的是同一個網站，cookie 才帶得上 |
+
+放在 nginx 後面要注意的兩個環境變數：
+
+- `TRUST_PROXY=1`：請求都經過 nginx，不設的話 API 看到的 IP 全是 nginx 的，登入次數限制會變成全站共用一份額度。設了之後以 nginx 接在 `X-Forwarded-For` 最後面的真實 IP 為準，使用者在前面偽造的值不影響。
+- `COOKIE_SECURE`：正式模式預設只在 HTTPS 送 cookie；本機用 http 跑時 compose 預設成 `false`，部署到 HTTPS 時改成 `true`。
+
+不用 Docker 也能跑正式版：`npm run build && npm run start:prod`。
+
 ## 資料表
 
 | 表 | 用途 |

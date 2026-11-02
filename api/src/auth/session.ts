@@ -16,8 +16,11 @@ export const ACCESS_COOKIE = "access_token";
 const REFRESH_COOKIE = "refresh_token";
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+// 正式環境預設只走 HTTPS；用 Docker 在本機以 http 跑時設 COOKIE_SECURE=false
+const SECURE = (process.env["COOKIE_SECURE"] ?? String(process.env["NODE_ENV"] === "production")) === "true";
+
 function cookieOptions(path: string): CookieOptions {
-  return { httpOnly: true, secure: process.env["NODE_ENV"] === "production", sameSite: "strict", path };
+  return { httpOnly: true, secure: SECURE, sameSite: "strict", path };
 }
 // refresh cookie 只送到 /api/auth，一般 API 請求不會帶著它到處跑
 const ACCESS_PATH = "/api";
