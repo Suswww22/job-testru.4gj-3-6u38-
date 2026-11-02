@@ -46,6 +46,8 @@ docker compose up --build -d
 
 ## 部署到 Render（＋ Neon 資料庫）
 
+線上版：https://job-tracker-95kk.onrender.com（免費方案閒置後會休眠，第一次開啟要等約一分鐘）
+
 用 `job-finder/Dockerfile`（單一容器版）：API 同時送出前端靜態檔（環境變數 `WEB_DIST`），整個網站只有一個網址。不拆成前端、後端兩個服務的原因是 `*.onrender.com` 的每個子網域對瀏覽器來說都是不同網站，`SameSite=Strict` 的 cookie 不會跨過去，登入會失效。
 
 容器啟動時先跑 `prisma migrate deploy` 再開 API（免費方案沒有獨立的部署前步驟），所以 `prisma` CLI 放在正式依賴。
@@ -55,6 +57,8 @@ docker compose up --build -d
 3. 之後推到 main 就會自動重新部署。
 
 免費方案閒置 15 分鐘會休眠，下一次開啟要等大約一分鐘。
+
+`TRUST_PROXY` 是實測出來的：Render 前面還有 Cloudflare，API 收到的 `X-Forwarded-For` 是「使用者, Cloudflare, Render 內部」，所以設 3。設成 1 的時候，API 把 Render 內部位址當成使用者 IP，登入次數限制等於全站共用一份額度。換平台時要重新量一次。
 
 ## 資料表
 
