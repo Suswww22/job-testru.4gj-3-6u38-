@@ -105,6 +105,9 @@ export interface DigestSettings {
   enabled: boolean;
   keywords: string[];
   region: RegionId | null;
+  email?: boolean;
+  /** 伺服器有沒有設定寄信（唯讀） */
+  mailAvailable?: boolean;
 }
 
 export interface DigestData {
@@ -122,6 +125,7 @@ export interface Digest {
   periodStart: string;
   periodEnd: string;
   createdAt: string;
+  emailedAt: string | null;
   data: DigestData;
 }
 

@@ -201,8 +201,16 @@ check "履歷帶多餘欄位 → 400" 400 "$status"
 # 週報：不設關鍵字，產生時不會連外部網站
 req PUT /digest/settings '{"enabled":true,"keywords":["a","b","c","d"],"region":null}'
 check "週報關鍵字超過 3 個 → 400" 400 "$status"
+req PUT /digest/settings '{"enabled":true,"keywords":[],"region":"taoyuan","email":"yes"}'
+check "週報 Email 開關不是布林 → 400" 400 "$status"
+req PUT /digest/settings '{"enabled":true,"keywords":[],"region":"taoyuan","email":true}'
+check "開啟週報 Email" 200 "$status"
 req PUT /digest/settings '{"enabled":true,"keywords":[],"region":"taoyuan"}'
 check "儲存週報設定" 200 "$status"
+[[ "$(field email)" == "true" ]] || fail "沒帶 email 欄位卻把 Email 開關改掉了：$body"
+# 關掉 Email 再產生，smoke 的假信箱不會真的寄信
+req PUT /digest/settings '{"enabled":true,"keywords":[],"region":"taoyuan","email":false}'
+check "關閉週報 Email" 200 "$status"
 req POST /digests
 check "立即產生週報" 201 "$status"
 [[ "$body" == *'"followUps":'* && "$body" == *'"changes":[{'* && "$body" == *'沒有推薦職缺'* ]] \
@@ -218,7 +226,7 @@ req GET /match
 req GET /digests
 [[ "$body" == '{"items":[]}' ]] || fail "Bob 看到別人的週報：$body"
 req GET /digest/settings
-[[ "$body" == '{"enabled":false,"keywords":[],"region":null}' ]] || fail "Bob 讀到別人的週報設定：$body"
+[[ "$body" == '{"enabled":false,"keywords":[],"region":null,"email":false,'* ]] || fail "Bob 讀到別人的週報設定：$body"
 req GET "/applications/$app"
 check "Bob 讀 Alice 的投遞 → 404" 404 "$status"
 req PATCH "/applications/$app" '{"status":"REJECTED"}'

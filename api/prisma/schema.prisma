@@ -32,6 +32,8 @@ model DigestSetting {
   keywords  String[] @default([])
   /// RegionId；null 代表不限地區
   region    String?
+  /// 產生週報時同時寄到帳號信箱
+  email     Boolean  @default(false)
   updatedAt DateTime @updatedAt
 }
 
@@ -43,6 +45,8 @@ model Digest {
   periodStart DateTime
   periodEnd   DateTime
   data        Json
+  /// 寄出 Email 的時間；沒開 Email 或寄送失敗是 null
+  emailedAt   DateTime?
   createdAt   DateTime @default(now())
 
   @@index([userId, createdAt])

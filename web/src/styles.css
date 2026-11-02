@@ -198,7 +198,9 @@ a.badge { text-decoration: none; }
 
 /* ---------- 週報 ---------- */
 .digest-page { max-width: 960px; }
-.digest-settings { display: grid; grid-template-columns: auto 1fr 8em auto; gap: 8px 12px; align-items: center; }
+.digest-settings { display: grid; grid-template-columns: 1fr 8em auto; gap: 8px 12px; align-items: center; }
+.digest-settings .switches { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.switch:has(input:disabled) { color: var(--muted); }
 .digest-settings .full { grid-column: 1 / -1; }
 .switch { display: flex; gap: 8px; align-items: center; white-space: nowrap; cursor: pointer; }
 .switch input { width: 18px; height: 18px; accent-color: var(--accent); }
@@ -214,7 +216,7 @@ a.badge { text-decoration: none; }
 .status-text { color: var(--status); font-weight: 600; }
 @media (max-width: 720px) {
   .digest-settings { grid-template-columns: 1fr 1fr; }
-  .digest-settings .switch, .digest-settings input:not([type]) { grid-column: 1 / -1; }
+  .digest-settings input:not([type]) { grid-column: 1 / -1; }
 }
 
 /* ---------- 投遞詳情 ---------- */

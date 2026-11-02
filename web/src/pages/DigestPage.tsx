@@ -39,7 +39,7 @@ export function DigestPage() {
         <details key={d.id} className="card digest" open={i === 0}>
           <summary>
             <strong>{day(d.periodStart)} – {day(d.periodEnd)}</strong>
-            <span className="muted small">{summaryLine(d.data)}</span>
+            <span className="muted small">{summaryLine(d.data)}{d.emailedAt && " · 已寄出 Email"}</span>
           </summary>
           <DigestBody data={d.data} />
         </details>
@@ -55,9 +55,9 @@ function summaryLine(d: DigestData): string {
 function Settings() {
   const qc = useQueryClient();
   const settings = useQuery({ queryKey: ["digest-settings"], queryFn: api.digestSettings });
-  const [f, setF] = useState({ enabled: false, keywords: "", region: "" as RegionId | "" });
+  const [f, setF] = useState({ enabled: false, keywords: "", region: "" as RegionId | "", email: false });
   useEffect(() => {
-    if (settings.data) setF({ enabled: settings.data.enabled, keywords: settings.data.keywords.join("、"), region: settings.data.region ?? "" });
+    if (settings.data) setF({ enabled: settings.data.enabled, keywords: settings.data.keywords.join("、"), region: settings.data.region ?? "", email: settings.data.email ?? false });
   }, [settings.data]);
   const save = useMutation({
     mutationFn: api.saveDigestSettings,
@@ -67,17 +67,24 @@ function Settings() {
   function submit(e: FormEvent) {
     e.preventDefault();
     const keywords = f.keywords.split(/[,，、\s]+/).map((k) => k.trim()).filter(Boolean);
-    save.mutate({ enabled: f.enabled, keywords, region: f.region || null });
+    save.mutate({ enabled: f.enabled, keywords, region: f.region || null, email: f.email });
   }
 
   if (settings.isPending) return null;
+  const mailAvailable = settings.data?.mailAvailable ?? false;
   const err = save.error instanceof ApiError ? save.error.message : null;
   return (
     <form className="card digest-settings" onSubmit={submit}>
-      <label className="switch">
-        <input type="checkbox" checked={f.enabled} onChange={(e) => setF({ ...f, enabled: e.target.checked })} />
-        每週一早上自動產生週報
-      </label>
+      <div className="switches full">
+        <label className="switch">
+          <input type="checkbox" checked={f.enabled} onChange={(e) => setF({ ...f, enabled: e.target.checked })} />
+          每週一早上自動產生週報
+        </label>
+        <label className="switch" title={mailAvailable ? undefined : "伺服器還沒設定寄信"}>
+          <input type="checkbox" checked={f.email} disabled={!mailAvailable} onChange={(e) => setF({ ...f, email: e.target.checked })} />
+          產生時寄到我的信箱
+        </label>
+      </div>
       <input
         value={f.keywords}
         onChange={(e) => setF({ ...f, keywords: e.target.value })}

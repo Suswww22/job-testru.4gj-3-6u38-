@@ -15,6 +15,7 @@ import { requireAuth, userIdOf } from "../auth/middleware.js";
 import { prisma } from "../db.js";
 import { HttpError } from "../errors.js";
 import { generateDigest } from "./generate.js";
+import { mailEnabled } from "./mail.js";
 
 const REGION_IDS = REGIONS.map((r) => r.id) as [RegionId, ...RegionId[]];
 /** 排程重跑（手動重試、GitHub 延遲）時，6 天內已產生過的使用者跳過，不會一週收到兩份 */
@@ -24,6 +25,8 @@ const settingsSchema = z.object({
   enabled: z.boolean(),
   keywords: z.array(z.string().trim().min(1).max(30)).max(3),
   region: z.enum(REGION_IDS).nullable(),
+  // 選填：沒帶就維持原本的設定
+  email: z.boolean().optional(),
 }).strict();
 
 // ---------- 使用者自己的週報 ----------
@@ -34,11 +37,15 @@ digestSettingsRouter.use(requireAuth);
 export const digestsRouter = Router();
 digestsRouter.use(requireAuth);
 
-const DEFAULT_SETTINGS = { enabled: false, keywords: [] as string[], region: null };
+/** mailAvailable：伺服器有沒有設定寄信，沒有的話前端把 Email 開關停用並說明 */
+const view = (s: { enabled: boolean; keywords: string[]; region: string | null; email: boolean } | null) => ({
+  ...(s ? { enabled: s.enabled, keywords: s.keywords, region: s.region, email: s.email } : { enabled: false, keywords: [] as string[], region: null, email: false }),
+  mailAvailable: mailEnabled(),
+});
 
 digestSettingsRouter.get("/settings", async (req, res) => {
   const s = await prisma.digestSetting.findUnique({ where: { userId: userIdOf(req) } });
-  res.json(s ? { enabled: s.enabled, keywords: s.keywords, region: s.region } : DEFAULT_SETTINGS);
+  res.json(view(s));
 });
 
 digestSettingsRouter.put("/settings", async (req, res) => {
@@ -50,7 +57,7 @@ digestSettingsRouter.put("/settings", async (req, res) => {
     create: { userId, ...data, keywords },
     update: { ...data, keywords },
   });
-  res.json({ enabled: s.enabled, keywords: s.keywords, region: s.region });
+  res.json(view(s));
 });
 
 digestsRouter.get("/", async (req, res) => {

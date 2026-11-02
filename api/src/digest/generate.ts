@@ -10,6 +10,7 @@ import { matchJob, parseResume } from "../../../src/shared/matcher.js";
 import type { Job, RegionId } from "../../../src/shared/types.js";
 import { prisma } from "../db.js";
 import { IMPORT_SOURCES, searchSource, toJobInput } from "../import/search.js";
+import { mailEnabled, renderDigestEmail, sendMail } from "./mail.js";
 
 const DAY = 24 * 60 * 60 * 1000;
 const PERIOD_DAYS = 7;
@@ -131,7 +132,22 @@ export async function generateDigest(userId: string, now = new Date()) {
     topJobsOf(userId, notes),
   ]);
   const data: DigestData = { progress, followUps, topJobs, notes };
-  return prisma.digest.create({
+  const digest = await prisma.digest.create({
     data: { userId, periodStart, periodEnd: now, data: data as unknown as Prisma.InputJsonValue },
   });
+  return (await emailDigest(userId, digest.id, data, periodStart, now)) ?? digest;
+}
+
+/** 設定有開 Email 就寄出並記下寄出時間；寄信失敗只記 log，站內週報已經存好了 */
+async function emailDigest(userId: string, digestId: string, data: DigestData, periodStart: Date, periodEnd: Date) {
+  if (!mailEnabled()) return null;
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, digestSetting: { select: { email: true } } } });
+  if (!user?.digestSetting?.email) return null;
+  try {
+    await sendMail(user.email, renderDigestEmail(data, periodStart, periodEnd, process.env["APP_URL"]));
+    return await prisma.digest.update({ where: { id: digestId }, data: { emailedAt: new Date() } });
+  } catch (err) {
+    console.error(`[digest-mail] ${userId} 寄送失敗：`, err);
+    return null;
+  }
 }

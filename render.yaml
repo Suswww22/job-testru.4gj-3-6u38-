@@ -23,3 +23,9 @@ services:
       # 每週週報排程的密鑰，由 Render 產生；複製到 GitHub repo 的 Actions secret CRON_SECRET
       - key: CRON_SECRET
         generateValue: true
+      # 週報 Email：Resend 的 API key，部署後在 Render 畫面上填；沒填就只產生站內週報
+      - key: RESEND_API_KEY
+        sync: false
+      # 信裡連結用的網址
+      - key: APP_URL
+        value: https://job-tracker-95kk.onrender.com

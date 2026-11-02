@@ -10,7 +10,7 @@ cp .env.example .env
 npm run db        # 啟動開發用 Postgres（port 5433），背景執行
 npm run migrate   # 套用 prisma/migrations
 npm run dev       # API：http://localhost:3001/api
-npm run smoke     # curl 冒煙測試（76 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
+npm run smoke     # curl 冒煙測試（79 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
 npm run db:stop
 ```
 
@@ -71,8 +71,8 @@ docker compose up --build -d
 | `ApplicationEvent` | 狀態歷程：每次狀態改變記一筆（from → to、時間），統計從這裡算 |
 | `Note` | 投遞筆記（面試心得、聯絡人…） |
 | `Resume` | 履歷純文字，每人一份；匹配時才解析，刪帳號時一起刪除 |
-| `DigestSetting` | 週報設定：開關、推薦職缺的搜尋關鍵字（最多 3 個）、地區 |
-| `Digest` | 每週一份週報，內容存成 JSON 快照，之後職缺被刪或狀態改變也不影響已產生的週報 |
+| `DigestSetting` | 週報設定：開關、推薦職缺的搜尋關鍵字（最多 3 個）、地區、是否寄 Email |
+| `Digest` | 每週一份週報，內容存成 JSON 快照，之後職缺被刪或狀態改變也不影響已產生的週報；`emailedAt` 記錄寄出時間 |
 
 ## API
 
@@ -104,7 +104,7 @@ docker compose up --build -d
 
 | GET | `/api/resume` | `{ content, updatedAt, profile }`；profile 是系統從履歷辨識出的技能、年資、學歷、地區、職務領域 |
 | PUT | `/api/resume` | 儲存履歷（`content`，最多 20000 字） |
-| GET／PUT | `/api/digest/settings` | 週報設定 `{ enabled, keywords, region }` |
+| GET／PUT | `/api/digest/settings` | 週報設定 `{ enabled, keywords, region, email }`；回應另有唯讀的 `mailAvailable`（伺服器是否設定寄信） |
 | GET | `/api/digests` | 最近 8 份週報，新的在前 |
 | POST | `/api/digests` | 立即產生一份（每個帳號每小時 5 次） |
 | POST | `/api/cron/weekly-digest` | 排程用：`Authorization: Bearer <CRON_SECRET>`，替所有開啟週報的使用者產生；6 天內產生過的跳過 |
@@ -123,6 +123,8 @@ docker compose up --build -d
 週報有三區：本週進度（從狀態歷程算）、已投遞超過 7 天沒有進展的投遞、新的推薦職缺（用設定的關鍵字搜尋台灣就業通與 Yourator，以履歷評分，40 分以上取前 5 筆；已在清單裡或最近 4 份週報推薦過的不再列出）。沒有推薦時會寫出原因，例如還沒填履歷。
 
 Render 免費方案沒有排程，改由 GitHub Actions（`.github/workflows/weekly-digest.yml`）每週一台灣時間 08:00 先叫醒服務，再帶著 `CRON_SECRET` 呼叫 `/api/cron/weekly-digest`。`CRON_SECRET` 由 Render 產生（`render.yaml` 的 `generateValue`），要複製到 GitHub repo 的 Actions secret。沒設定或少於 32 字元時，排程端點回 503。
+
+設定裡開啟 Email 後，每次產生週報（排程或手動）會用 [Resend](https://resend.com) 的 HTTP API 寄到帳號信箱，HTML 與純文字各一份。職缺標題等外部資料一律跳脫，只輸出 http(s) 連結。寄信失敗不影響週報本身，只是 `emailedAt` 留空。伺服器沒設 `RESEND_API_KEY` 時不寄信，前端的 Email 開關會停用。沒有自己的網域時用 Resend 的測試寄件者，只能寄給註冊 Resend 的那個信箱。
 
 ## 驗證設計
 
