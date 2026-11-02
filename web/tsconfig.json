@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "rootDir": "..",
+    "noEmit": true,
+    // 第三方套件的 .d.ts（例如 dnd-kit 用了 React 19 已移除的全域 JSX）不在檢查範圍
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}

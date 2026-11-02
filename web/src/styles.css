@@ -1,0 +1,141 @@
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c2027;
+  --muted: #667085;
+  --border: #e3e6ea;
+  --accent: #2f6fde;
+  --accent-text: #ffffff;
+  --danger: #c9372c;
+  --s-saved: #8a94a6;
+  --s-applied: #2f6fde;
+  --s-interview: #b7791f;
+  --s-offer: #22863a;
+  --s-rejected: #c9372c;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --surface: #1d2026;
+    --text: #e6e8eb;
+    --muted: #98a1b0;
+    --border: #2d323a;
+    --accent: #5b8ff0;
+    --danger: #f06a5f;
+    --s-saved: #98a1b0;
+    --s-applied: #5b8ff0;
+    --s-interview: #e0a43c;
+    --s-offer: #4cc46a;
+    --s-rejected: #f06a5f;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+}
+
+a { color: var(--accent); }
+h1, h2, h3 { margin: 0; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 0.95rem; }
+
+button, input, select {
+  font: inherit;
+  color: inherit;
+}
+input, select {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  min-width: 0;
+}
+button {
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:disabled { opacity: 0.6; cursor: default; }
+button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.error { color: var(--danger); margin: 0; }
+.center { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.stack { display: grid; gap: 16px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.between { justify-content: space-between; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+/* ---------- 版面 ---------- */
+.shell { max-width: 1280px; margin: 0 auto; padding: 0 16px 32px; }
+.topbar { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
+.topbar nav { display: flex; gap: 4px; }
+.topbar nav a { padding: 6px 12px; border-radius: 8px; color: var(--muted); text-decoration: none; }
+.topbar nav a.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.topbar .user { margin-left: auto; }
+
+/* ---------- 登入 ---------- */
+.auth { width: min(360px, 100%); display: grid; gap: 14px; padding: 28px; }
+.auth h1 { font-size: 1.4rem; }
+.auth label { display: grid; gap: 4px; font-size: 0.9rem; color: var(--muted); }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.tabs button { background: transparent; color: var(--muted); border-radius: 0; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-text); }
+
+/* ---------- 職缺 ---------- */
+.search { width: min(320px, 100%); }
+.new-job { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.new-job .full { grid-column: 1 / -1; }
+.job-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.job { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.job-main { display: grid; gap: 4px; min-width: 0; }
+.job-actions { display: flex; gap: 8px; align-items: center; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 0.8rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+.badge { font-size: 0.85rem; padding: 3px 10px; border-radius: 999px; border: 1px solid currentColor; }
+
+.s-SAVED { --status: var(--s-saved); }
+.s-APPLIED { --status: var(--s-applied); }
+.s-INTERVIEW { --status: var(--s-interview); }
+.s-OFFER { --status: var(--s-offer); }
+.s-REJECTED { --status: var(--s-rejected); }
+.badge { color: var(--status); }
+
+/* ---------- 看板 ---------- */
+.board { display: grid; grid-template-columns: repeat(5, minmax(160px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.column {
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 300px; padding: 10px;
+  border-radius: 12px; background: color-mix(in srgb, var(--surface) 60%, transparent);
+  border: 1px solid var(--border); border-top: 3px solid var(--status);
+  transition: background 0.15s;
+}
+.column.over { background: color-mix(in srgb, var(--status) 12%, var(--surface)); }
+.kanban { display: grid; gap: 2px; padding: 10px 12px; cursor: grab; touch-action: none; }
+.kanban.ghosted { opacity: 0.35; }
+.kanban.lifted { cursor: grabbing; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); }
+
+@media (max-width: 720px) {
+  .board { grid-template-columns: repeat(5, 78vw); scroll-snap-type: x mandatory; }
+  .column { scroll-snap-align: start; }
+}
