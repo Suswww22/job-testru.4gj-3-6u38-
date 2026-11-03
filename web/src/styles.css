@@ -93,6 +93,13 @@ button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
 .topbar nav a { padding: 6px 12px; border-radius: 8px; color: var(--muted); text-decoration: none; }
 .topbar nav a.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
 .topbar .user { margin-left: auto; }
+/* 手機：品牌與登出留在第一行，選單獨佔第二行；放不下時左右滑，不把字拆成兩行 */
+.topbar nav a { white-space: nowrap; }
+@media (max-width: 720px) {
+  .topbar { gap: 10px 12px; padding: 10px 0; margin-bottom: 14px; }
+  .topbar nav { order: 1; flex: 1 0 100%; overflow-x: auto; scrollbar-width: none; }
+  .topbar nav a { padding: 6px 10px; }
+}
 
 /* ---------- 登入 ---------- */
 .auth { width: min(360px, 100%); display: grid; gap: 14px; padding: 28px; }

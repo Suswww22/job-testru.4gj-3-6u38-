@@ -1,4 +1,5 @@
-import { Navigate, NavLink, Route, Routes } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 
 import { useAuth } from "./auth";
 import { ApplicationPage } from "./pages/ApplicationPage";
@@ -11,6 +12,13 @@ import { StatsPage } from "./pages/StatsPage";
 
 export function App() {
   const { user, loading, logout } = useAuth();
+  const { pathname } = useLocation();
+  const nav = useRef<HTMLElement>(null);
+
+  // 手機上選單可以左右滑：換頁後把目前這一項捲進畫面
+  useEffect(() => {
+    nav.current?.querySelector(".active")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [pathname, user]);
 
   if (loading) return <p className="center muted">載入中…</p>;
   if (!user) return <LoginPage />;
@@ -19,7 +27,7 @@ export function App() {
     <div className="shell">
       <header className="topbar">
         <strong className="brand">求職追蹤</strong>
-        <nav>
+        <nav ref={nav}>
           <NavLink to="/jobs">職缺</NavLink>
           <NavLink to="/board">投遞看板</NavLink>
           <NavLink to="/match">履歷匹配</NavLink>
