@@ -18,7 +18,7 @@ npm run db:stop
 
 `package.json` 的 `overrides` 把 Prisma CLI 內部用的 `deepmerge-ts` 指定到 8.x：7.x 有遞迴物件造成堆疊耗盡的漏洞（GHSA-ggr8-5vv4-36mx），官方修正要升到 Prisma 7。Prisma 6 只用它合併自己的設定檔，8.0 的破壞性變更（`deepmergeInto`）也用不到，所以先用 override 修補。升級 Prisma 7 時可以移除。
 
-`.github/workflows/test.yml` 在每次 push 與 PR 時自動跑型別檢查與單元測試。
+`.github/workflows/test.yml` 在每次 push 與 PR 時自動跑型別檢查、單元測試與端對端測試。
 
 `npm run db` 用的是 `embedded-postgres` 套件附的 Postgres 執行檔，不用另外安裝。在 Windows 上有兩個地方要特別處理：
 
