@@ -248,6 +248,10 @@ button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
 a.badge { text-decoration: none; }
 @media (max-width: 720px) {
   .match-layout { grid-template-columns: 1fr; }
+  /* 手機：分數欄縮窄；按鈕排到職稱下方，職稱不會被擠成一長條 */
+  .match { grid-template-columns: 44px 1fr; gap: 10px; padding: 14px 12px; }
+  .match-body > .row { flex-wrap: wrap; }
+  .match-body .job-main { flex: 1 1 100%; }
 }
 
 /* ---------- 週報 ---------- */

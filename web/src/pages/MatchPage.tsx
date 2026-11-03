@@ -9,6 +9,7 @@ import { REGIONS } from "../../../src/shared/data";
 import type { RegionId, ResumeProfile } from "../../../src/shared/types";
 import { api } from "../api/client";
 import { STATUSES, type MatchItem } from "../api/types";
+import { Icon } from "../components/Icon";
 import { salaryText } from "./JobsPage";
 
 const regionName = (id: RegionId | null) => REGIONS.find((r) => r.id === id)?.name ?? "";
@@ -111,8 +112,12 @@ function MatchCard({ m, onTrack, tracking }: { m: MatchItem; onTrack: () => void
       <div className="stack match-body">
         <div className="row between">
           <div className="job-main">
-            <strong>{job.sourceUrl ? <a href={job.sourceUrl} target="_blank" rel="noreferrer">{job.title}</a> : job.title}</strong>
-            <span className="muted small">{[job.company, regionName(job.region), salaryText(job)].filter(Boolean).join(" · ")}</span>
+            <strong className="job-title">{job.sourceUrl ? <a href={job.sourceUrl} target="_blank" rel="noreferrer">{job.title}</a> : job.title}</strong>
+            <span className="meta">
+              <span><Icon name="building" />{job.company}</span>
+              {job.region && <span><Icon name="pin" />{regionName(job.region)}</span>}
+              <span><Icon name="money" />{salaryText(job)}</span>
+            </span>
           </div>
           {job.application ? (
             <Link to={`/applications/${job.application.id}`} className={`badge s-${job.application.status}`}>{statusLabel(job.application.status)}</Link>
