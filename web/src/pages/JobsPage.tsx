@@ -5,6 +5,7 @@ import { REGIONS } from "../../../src/shared/data";
 import type { RegionId } from "../../../src/shared/types";
 import { api, ApiError } from "../api/client";
 import { STATUSES, type Job } from "../api/types";
+import { Icon } from "../components/Icon";
 import { ImportPanel } from "./ImportPanel";
 
 const regionName = (id: RegionId | null) => REGIONS.find((r) => r.id === id)?.name ?? "";
@@ -55,9 +56,12 @@ export function JobsPage() {
         {jobs.data?.items.map((job) => (
           <li key={job.id} className="card job">
             <div className="job-main">
-              <strong>{job.sourceUrl ? <a href={job.sourceUrl} target="_blank" rel="noreferrer">{job.title}</a> : job.title}</strong>
-              <span className="muted">
-                {[job.company, regionName(job.region), salaryText(job), SOURCE_NAMES[job.source]].filter(Boolean).join(" · ")}
+              <strong className="job-title">{job.sourceUrl ? <a href={job.sourceUrl} target="_blank" rel="noreferrer">{job.title}</a> : job.title}</strong>
+              <span className="meta"><span><Icon name="building" />{job.company}</span></span>
+              <span className="meta">
+                {job.region && <span><Icon name="pin" />{regionName(job.region)}</span>}
+                <span><Icon name="money" />{salaryText(job)}</span>
+                {SOURCE_NAMES[job.source] && <span><Icon name="globe" />{SOURCE_NAMES[job.source]}</span>}
               </span>
               {job.skills.length > 0 && (
                 <span className="chips">{job.skills.map((s) => <span key={s} className="chip">{s}</span>)}</span>

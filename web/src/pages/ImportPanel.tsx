@@ -8,6 +8,7 @@ import { REGIONS } from "../../../src/shared/data";
 import type { RegionId } from "../../../src/shared/types";
 import { api, ApiError } from "../api/client";
 import type { ImportItem, ImportSource } from "../api/types";
+import { Icon } from "../components/Icon";
 import { salaryText } from "./JobsPage";
 
 const SOURCE_OPTIONS: readonly { id: ImportSource; name: string }[] = [
@@ -17,18 +18,6 @@ const SOURCE_OPTIONS: readonly { id: ImportSource; name: string }[] = [
 const regionName = (id: RegionId | null | undefined) => REGIONS.find((r) => r.id === id)?.name ?? "";
 /** 搜尋列下方的快速地區，點一下就換地區並搜尋 */
 const QUICK_REGIONS: readonly RegionId[] = ["taipei", "newtaipei", "taichung", "remote"];
-
-/** 搜尋列裡的小圖示（線條風格，顏色跟著文字） */
-const ICONS = {
-  search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm9 16-4.35-4.35",
-  pin: "M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
-  globe: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm-9 9h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z",
-};
-const Icon = ({ name }: { name: keyof typeof ICONS }) => (
-  <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d={ICONS[name]} />
-  </svg>
-);
 
 export function ImportPanel({ onImported }: { onImported: () => void }) {
   const qc = useQueryClient();
@@ -133,7 +122,11 @@ export function ImportPanel({ onImported }: { onImported: () => void }) {
             <li key={j.externalId} className="row between">
               <div className="job-main">
                 {j.sourceUrl ? <a href={j.sourceUrl} target="_blank" rel="noreferrer">{j.title}</a> : <span>{j.title}</span>}
-                <span className="muted small">{[j.company, regionName(j.region), salaryText({ salaryKind: j.salaryKind ?? "面議", salaryMin: j.salaryMin ?? null, salaryMax: j.salaryMax ?? null })].filter(Boolean).join(" · ")}</span>
+                <span className="meta">
+                  <span><Icon name="building" />{j.company}</span>
+                  {j.region && <span><Icon name="pin" />{regionName(j.region)}</span>}
+                  <span><Icon name="money" />{salaryText({ salaryKind: j.salaryKind ?? "面議", salaryMin: j.salaryMin ?? null, salaryMax: j.salaryMax ?? null })}</span>
+                </span>
               </div>
               {j.saved ? (
                 <span className="muted small">已加入</span>
