@@ -16,7 +16,7 @@ import {
   type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type KeyboardEventHandler, type PointerEventHandler } from "react";
+import { useRef, useState, type KeyboardEventHandler, type PointerEventHandler } from "react";
 import { Link } from "react-router-dom";
 
 import { api } from "../api/client";
@@ -72,6 +72,18 @@ export function BoardPage() {
     },
   };
 
+  // 手機上一次只看得到一欄：上方的欄位分頁顯示各欄數量，點了捲到那一欄；左右滑時分頁跟著亮
+  const board = useRef<HTMLDivElement>(null);
+  const [current, setCurrent] = useState(0);
+  function onBoardScroll() {
+    const el = board.current;
+    const [a, b] = el ? [...el.children] as HTMLElement[] : [];
+    if (el && a && b) setCurrent(Math.round(el.scrollLeft / (b.offsetLeft - a.offsetLeft)));
+  }
+  function jumpTo(i: number) {
+    board.current?.children[i]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+  }
+
   if (apps.isPending) return <p className="muted">載入中…</p>;
   if (apps.isError) return <p className="error">讀取失敗：{apps.error.message}</p>;
   if (apps.data.items.length === 0) {
@@ -82,7 +94,14 @@ export function BoardPage() {
     <section className="stack">
       {move.isError && <p className="error" role="alert">更新失敗：{move.error.message}</p>}
       <DndContext sensors={sensors} accessibility={accessibility} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>
-        <div className="board">
+        <div className="board-tabs" role="group" aria-label="跳到欄位">
+          {STATUSES.map((s, i) => (
+            <button key={s.id} type="button" className={`pill s-${s.id}`} aria-pressed={current === i} onClick={() => jumpTo(i)}>
+              {s.label} {apps.data.items.filter((a) => a.status === s.id).length}
+            </button>
+          ))}
+        </div>
+        <div className="board" ref={board} onScroll={onBoardScroll}>
           {STATUSES.map((s) => (
             <Column key={s.id} status={s.id} label={s.label} items={apps.data.items.filter((a) => a.status === s.id)} />
           ))}
@@ -120,6 +139,7 @@ function Column({ status, label, items }: { status: ApplicationStatus; label: st
     <div ref={setNodeRef} className={`column s-${status}${isOver ? " over" : ""}`} aria-label={`${label}（${items.length}）`}>
       <h3>{label} <span className="muted">{items.length}</span></h3>
       {items.map((a) => <Card key={a.id} app={a} />)}
+      {items.length === 0 && <p className="empty muted small">把卡片拖到這裡</p>}
     </div>
   );
 }

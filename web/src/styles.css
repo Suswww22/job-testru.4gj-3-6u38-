@@ -179,7 +179,8 @@ button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
 .board { display: grid; grid-template-columns: repeat(5, minmax(160px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
 .column {
   display: flex; flex-direction: column; gap: 8px;
-  min-height: 300px; padding: 10px;
+  /* 撐到接近畫面底部，空欄也有足夠的放置區 */
+  min-height: max(300px, calc(100vh - 180px)); padding: 10px;
   border-radius: 12px; background: color-mix(in srgb, var(--surface) 60%, transparent);
   border: 1px solid var(--border); border-top: 3px solid var(--status);
   transition: background 0.15s;
@@ -196,10 +197,18 @@ button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
 .handle:hover { color: var(--text); }
 .kanban.ghosted { opacity: 0.35; }
 .kanban.lifted { cursor: grabbing; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); }
+.column .empty {
+  margin: 0; padding: 18px 8px; text-align: center;
+  border: 1px dashed var(--border); border-radius: 8px;
+}
+.board-tabs { display: none; }
 
 @media (max-width: 720px) {
   .board { grid-template-columns: repeat(5, 78vw); scroll-snap-type: x mandatory; }
-  .column { scroll-snap-align: start; }
+  .column { scroll-snap-align: start; min-height: max(300px, calc(100vh - 230px)); }
+  .board-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .board-tabs .pill { padding: 4px 10px; flex: none; }
+  .board-tabs .pill[aria-pressed="true"] { color: var(--status); border-color: var(--status); background: color-mix(in srgb, var(--status) 12%, transparent); }
 }
 
 /* ---------- 統計 ---------- */
