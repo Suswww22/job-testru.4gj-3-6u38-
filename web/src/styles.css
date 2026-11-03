@@ -114,15 +114,38 @@ button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
 .new-job { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 .new-job .full { grid-column: 1 / -1; }
 .add-mode { width: min(280px, 100%); }
-.import-form { display: grid; grid-template-columns: 9em 8em 1fr auto; gap: 8px; }
+/* 搜尋列：關鍵字、地區、來源、搜尋收在同一條外框裡，欄位之間用細線分隔 */
+.searchbar {
+  display: grid;
+  grid-template-columns: 1fr 10em 13em auto;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 6px;
+}
+.searchbar:focus-within { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); }
+.searchbar .field { display: flex; align-items: center; gap: 6px; padding: 0 10px; min-width: 0; color: var(--muted); }
+.searchbar .field + .field { border-left: 1px solid var(--border); }
+.searchbar input, .searchbar select { flex: 1; border: 0; background: transparent; color: var(--text); padding: 0.45rem 0; }
+.searchbar input:focus-visible, .searchbar select:focus-visible { outline: none; }
+.searchbar select option { background: var(--surface); }
+.searchbar button { padding: 0.55rem 1.6rem; font-weight: 600; }
+.icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.quick-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px 4px 8px; border-radius: 999px; background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 0.9rem; }
+.pill .icon { width: 15px; height: 15px; }
+.pill[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .import-list { list-style: none; margin: 0; padding: 0; display: grid; max-height: 420px; overflow-y: auto; }
 .import-list li { padding: 8px 0; border-top: 1px solid var(--border); flex-wrap: nowrap; }
 .import-list .job-main a { color: var(--text); font-weight: 600; text-decoration: none; }
 .import-list .job-main a:hover { color: var(--accent); text-decoration: underline; }
 @media (max-width: 720px) {
-  .import-form { grid-template-columns: 1fr 1fr; }
-  .import-form input { grid-column: 1 / -1; }
-  .import-form button { grid-column: 1 / -1; }
+  /* 手機：關鍵字一行、地區與來源一行、搜尋鈕一行 */
+  .searchbar { grid-template-columns: 1fr 1fr; gap: 4px 0; }
+  .searchbar .keyword { grid-column: 1 / -1; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .searchbar .keyword + .field { border-left: 0; }
+  .searchbar button { grid-column: 1 / -1; }
 }
 .job-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .job { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
