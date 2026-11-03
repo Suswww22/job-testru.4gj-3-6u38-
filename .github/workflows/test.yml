@@ -21,3 +21,47 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+
+  # 端對端測試：GitHub 開一個臨時 Postgres，跑 migration 後用真的瀏覽器操作整個網站
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jobtracker
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            api/package-lock.json
+            web/package-lock.json
+      - name: 安裝後端並建立資料表
+        working-directory: api
+        run: |
+          npm ci
+          cp .env.example .env
+          npx prisma migrate deploy
+      - name: 安裝前端與瀏覽器
+        working-directory: web
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: 端對端測試
+        working-directory: web
+        run: npx playwright test
+      - name: 失敗時保留報告（含操作錄影般的 trace）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7

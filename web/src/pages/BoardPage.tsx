@@ -12,6 +12,8 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type KeyboardCoordinateGetter,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type KeyboardEventHandler, type PointerEventHandler } from "react";
@@ -43,7 +45,8 @@ export function BoardPage() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), // 移動 5px 才算拖拉，點連結不會誤觸
-    useSensor(KeyboardSensor), // 空白鍵拿起、方向鍵移動、空白鍵放下
+    // 空白鍵拿起、方向鍵移到上一欄／下一欄、空白鍵放下
+    useSensor(KeyboardSensor, { coordinateGetter: columnJump((id) => apps.data?.items.find((a) => a.id === id)?.status) }),
   );
 
   function onDragStart(e: DragStartEvent) {
@@ -91,6 +94,24 @@ export function BoardPage() {
       </DndContext>
     </section>
   );
+}
+
+/**
+ * 方向鍵直接跳到上一欄／下一欄。dnd-kit 預設每按一次只移 25px，鍵盤使用者要按十幾下才到隔壁欄。
+ * 右、下是下一欄，左、上是上一欄（窄螢幕時欄位會上下排）。
+ */
+function columnJump(statusOf: (id: UniqueIdentifier) => ApplicationStatus | undefined): KeyboardCoordinateGetter {
+  return (event, { active, currentCoordinates, context }) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.code];
+    if (step === undefined) return;
+    event.preventDefault();
+    const ids = STATUSES.map((s) => s.id);
+    const from = ids.indexOf((context.over?.id ?? statusOf(active)) as ApplicationStatus);
+    const to = ids[from + step];
+    const rect = to && context.droppableRects.get(to);
+    // 已經在第一欄或最後一欄：停在原地
+    return rect ? { x: rect.left + 8, y: rect.top + 40 } : currentCoordinates;
+  };
 }
 
 function Column({ status, label, items }: { status: ApplicationStatus; label: string; items: Application[] }) {

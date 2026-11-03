@@ -10,6 +10,7 @@
 npm install
 npm run dev      # http://localhost:5173，/api 由 Vite 轉發到 3001
 npm run build    # 型別檢查＋正式版建置，輸出到 dist/
+npm run e2e      # Playwright 端對端測試（需先 cd ../api && npm run db）
 ```
 
 ## 頁面
@@ -34,3 +35,11 @@ npm run build    # 型別檢查＋正式版建置，輸出到 dist/
 - **漏斗從歷程算**：「面試」那一關算的是曾經進過面試的投遞，面試後被拒的也算在內；若只看目前狀態，被拒的投遞會讓面試率被低估。
 - **圖表不用套件**：資料只有四、五條，用 CSS 畫橫條就夠了。每條都寫上名稱和數字，不靠顏色辨認（面試和錄取的顏色在紅綠色弱下分不太開，已用色盲檢查工具確認過）。
 - 地區選項直接取自 `../src/shared/data.ts`，和 API 的驗證規則是同一份資料。
+
+## 端對端測試
+
+`e2e/` 用 Playwright 開真的 Chromium 操作網站：註冊、手動新增職缺、加入追蹤、滑鼠與鍵盤拖曳看板卡片（含 Esc 取消）、詳情頁狀態歷程、統計。每個測試註冊自己的帳號，結束後刪除。
+
+測試跑的是正式版建置：`vite build` 後由 API 在 3101 port 同時送前端與 `/api`，和 Render 上的部署方式相同，也不影響開發中的 3001／5173。第一次跑要先 `npx playwright install chromium`。CI（`.github/workflows/test.yml`）用 GitHub 的臨時 Postgres 跑同一套測試，失敗時保留 trace 供下載。
+
+鍵盤拖曳：方向鍵每按一次跳一欄（右、下是下一欄；左、上是上一欄），螢幕閱讀器會播報目前在哪一欄。
