@@ -40,7 +40,7 @@ export function ApplicationPage() {
   const app = detail.data;
   const { job } = app;
   return (
-    <section className="stack detail">
+    <section className="stack narrow">
       <Link to="/board" className="small">← 投遞看板</Link>
 
       <div className="card stack">

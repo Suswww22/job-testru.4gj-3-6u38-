@@ -87,6 +87,8 @@ button.ghost.danger:hover { color: var(--danger); border-color: var(--danger); }
 }
 
 /* ---------- 版面 ---------- */
+/* 以文字與清單為主的頁面限制寬度並置中，大螢幕上視線不用左右掃太遠；看板與統計維持全寬 */
+.narrow { width: 100%; max-width: 1000px; margin-inline: auto; }
 .shell { max-width: 1280px; margin: 0 auto; padding: 0 16px 32px; }
 .topbar { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
 .topbar nav { display: flex; gap: 4px; }
@@ -249,7 +251,6 @@ a.badge { text-decoration: none; }
 }
 
 /* ---------- 週報 ---------- */
-.digest-page { max-width: 960px; }
 .digest-settings { display: grid; grid-template-columns: 1fr 8em auto; gap: 8px 12px; align-items: center; }
 .digest-settings .switches { display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .switch:has(input:disabled) { color: var(--muted); }
@@ -272,7 +273,6 @@ a.badge { text-decoration: none; }
 }
 
 /* ---------- 投遞詳情 ---------- */
-.detail { max-width: 960px; }
 .segmented { display: flex; flex-wrap: wrap; gap: 6px; }
 .segmented button { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 .segmented button[aria-pressed="true"] { background: var(--status); border-color: var(--status); color: #fff; }

@@ -33,7 +33,7 @@ export function JobsPage() {
   const remove = useMutation({ mutationFn: api.deleteJob, onSuccess: refresh });
 
   return (
-    <section className="stack">
+    <section className="stack narrow">
       <div className="row between">
         <h2>職缺 {jobs.data && <span className="muted">（{jobs.data.total}）</span>}</h2>
         <input className="search" type="search" placeholder="搜尋職稱、公司、技能" value={q} onChange={(e) => setQ(e.target.value)} />

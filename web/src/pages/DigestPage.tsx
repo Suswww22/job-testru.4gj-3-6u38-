@@ -23,7 +23,7 @@ export function DigestPage() {
   });
 
   return (
-    <section className="stack digest-page">
+    <section className="stack narrow">
       <Settings />
       <div className="row between">
         <h2>週報</h2>
