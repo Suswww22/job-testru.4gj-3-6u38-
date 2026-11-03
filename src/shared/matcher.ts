@@ -131,9 +131,9 @@ export function classify(title: string, extra: string): { categoryId: string; su
 
 export function parseYears(raw: string): number | null {
   const patterns: readonly RegExp[] = [
-    // 「4 年前端開發經驗」「3 年 React、Node.js 開發經驗」：年與經驗之間可以夾技能清單（到句號或換行為止）。
+    // 「4 年前端開發經驗」「3 年 React、Node.js 開發經驗」：年與經驗之間可以夾技能清單（到句號或換行為止，最多 40 字，約可列四五項技能）。
     // (?<!\d) 避免「2024年…經驗」被讀成 24 年；「年前」後面不是「端」時是「3 年前離職」這類時間，不是年資
-    /(?<!\d)(\d{1,2})\s*(?:\+|多)?\s*年(?:以上)?(?!前(?!端))[^\d\n。;；]{0,30}?經[驗歷]/g,
+    /(?<!\d)(\d{1,2})\s*(?:\+|多)?\s*年(?:以上)?(?!前(?!端))[^\d\n。;；]{0,40}?經[驗歷]/g,
     /經[驗歷]\s*[:：]?\s*(\d{1,2})\s*年/g,
     /(?<!\d)(\d{1,2})\+?\s*years?/gi,
   ];

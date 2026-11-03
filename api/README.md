@@ -11,8 +11,12 @@ npm run db        # 啟動開發用 Postgres（port 5433），背景執行
 npm run migrate   # 套用 prisma/migrations
 npm run dev       # API：http://localhost:3001/api
 npm run smoke     # curl 冒煙測試（79 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
+npm test          # Vitest 單元測試（38 項，不需資料庫）：履歷匹配規則、週報 Email 內容、匯入欄位轉換
+npm run typecheck # 型別檢查（含測試檔）
 npm run db:stop
 ```
+
+`.github/workflows/test.yml` 在每次 push 與 PR 時自動跑型別檢查與單元測試。
 
 `npm run db` 用的是 `embedded-postgres` 套件附的 Postgres 執行檔，不用另外安裝。在 Windows 上有兩個地方要特別處理：
 
