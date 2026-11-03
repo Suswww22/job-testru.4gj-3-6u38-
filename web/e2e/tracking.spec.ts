@@ -20,6 +20,18 @@ async function addTrackedJob(page: Page, title: string) {
   await expect(row.getByRole("button", { name: "加入追蹤" })).toHaveCount(0);
 }
 
+/**
+ * 用空白鍵拿起卡片。dnd-kit 處理這次按鍵時用 setTimeout(0) 才開始監聽方向鍵，
+ * 太快按下一個鍵會被吞掉（CI 機器上偶爾發生）。看到播報後在頁面裡再排一個 setTimeout(0)，
+ * 計時器依序執行，它跑完時 dnd-kit 一定已經在監聽了。
+ */
+async function pickUp(page: Page, title: string) {
+  await page.getByRole("button", { name: `移動「${title}」` }).focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByRole("status")).toContainText(`「${title}」移到收藏`);
+  await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+}
+
 const column = (page: Page, label: string) =>
   page.locator(".column").filter({ has: page.getByRole("heading", { name: new RegExp(`^${label}`) }) });
 
@@ -57,12 +69,9 @@ test("只用鍵盤把卡片移到「已投」", async ({ page, email }) => {
   await addTrackedJob(page, "E2E 鍵盤拖曳");
   await nav(page, "投遞看板").click();
 
-  await page.getByRole("button", { name: "移動「E2E 鍵盤拖曳」" }).focus();
-  // 每按一次方向鍵跳一欄：收藏 → 已投 → 面試 → 已投。
-  // 每一步等螢幕閱讀器的播報出來再按下一個鍵：dnd-kit 拿起卡片後要一點時間才開始接收方向鍵，真人不會按這麼快
+  // 每按一次方向鍵跳一欄：收藏 → 已投 → 面試 → 已投；每一步確認螢幕閱讀器的播報
+  await pickUp(page, "E2E 鍵盤拖曳");
   const status = page.getByRole("status");
-  await page.keyboard.press("Space");
-  await expect(status).toContainText("移到收藏");
   await page.keyboard.press("ArrowRight");
   await expect(status).toContainText("移到已投");
   await page.keyboard.press("ArrowRight");
@@ -82,10 +91,8 @@ test("鍵盤拖曳按 Esc 取消，卡片留在原欄", async ({ page, email }) 
   await addTrackedJob(page, "E2E 取消拖曳");
   await nav(page, "投遞看板").click();
 
-  await page.getByRole("button", { name: "移動「E2E 取消拖曳」" }).focus();
+  await pickUp(page, "E2E 取消拖曳");
   const status = page.getByRole("status");
-  await page.keyboard.press("Space");
-  await expect(status).toContainText("移到收藏");
   await page.keyboard.press("ArrowRight");
   await expect(status).toContainText("移到已投");
   await page.keyboard.press("Escape");

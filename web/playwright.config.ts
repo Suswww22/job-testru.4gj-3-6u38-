@@ -18,7 +18,8 @@ export default defineConfig({
   workers: 2,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
-  reporter: CI ? [["list"], ["html", { open: "never" }]] : "list",
+  // CI 上用 github reporter：失敗原因會變成 GitHub 的 annotation，不用下載 log 就看得到
+  reporter: CI ? [["list"], ["github"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: `http://localhost:${PORT}`,
     locale: "zh-TW",
