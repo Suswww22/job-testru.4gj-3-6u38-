@@ -2,7 +2,7 @@
 
 import { Prisma } from "@prisma/client";
 import type { ErrorRequestHandler } from "express";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 export class HttpError extends Error {
   constructor(readonly status: number, message: string) {
@@ -14,7 +14,7 @@ export const errorHandler: ErrorRequestHandler = (err: unknown, _req, res, _next
   if (err instanceof HttpError) {
     res.status(err.status).json({ error: { message: err.message } });
   } else if (err instanceof ZodError) {
-    res.status(400).json({ error: { message: "輸入格式錯誤", details: err.flatten() } });
+    res.status(400).json({ error: { message: "輸入格式錯誤", details: z.flattenError(err) } });
   } else if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
     res.status(409).json({ error: { message: "資料重複", details: err.meta } });
   } else if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {

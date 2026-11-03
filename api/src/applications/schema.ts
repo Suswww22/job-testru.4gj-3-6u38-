@@ -3,7 +3,7 @@
 import { ApplicationStatus } from "@prisma/client";
 import { z } from "zod";
 
-const status = z.nativeEnum(ApplicationStatus);
+const status = z.enum(ApplicationStatus);
 
 export const applicationCreateSchema = z.object({
   jobId: z.string().min(1).max(50),

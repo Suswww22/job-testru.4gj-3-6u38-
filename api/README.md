@@ -10,11 +10,13 @@ cp .env.example .env
 npm run db        # 啟動開發用 Postgres（port 5433），背景執行
 npm run migrate   # 套用 prisma/migrations
 npm run dev       # API：http://localhost:3001/api
-npm run smoke     # curl 冒煙測試（79 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
+npm run smoke     # curl 冒煙測試（81 項）：登入、token 輪替、次數限制、職缺、投遞、筆記、資料隔離、改密碼、刪帳號
 npm test          # Vitest 單元測試（38 項，不需資料庫）：履歷匹配規則、週報 Email 內容、匯入欄位轉換
 npm run typecheck # 型別檢查（含測試檔）
 npm run db:stop
 ```
+
+`package.json` 的 `overrides` 把 Prisma CLI 內部用的 `deepmerge-ts` 指定到 8.x：7.x 有遞迴物件造成堆疊耗盡的漏洞（GHSA-ggr8-5vv4-36mx），官方修正要升到 Prisma 7。Prisma 6 只用它合併自己的設定檔，8.0 的破壞性變更（`deepmergeInto`）也用不到，所以先用 override 修補。升級 Prisma 7 時可以移除。
 
 `.github/workflows/test.yml` 在每次 push 與 PR 時自動跑型別檢查與單元測試。
 

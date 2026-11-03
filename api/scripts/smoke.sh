@@ -117,6 +117,10 @@ check "薪資下限大於資料庫裡的上限 → 400" 400 "$status"
 
 req POST /jobs '{"title":"x","company":"y","userId":"someone-else"}'
 check "想自己指定 userId → 400" 400 "$status"
+req POST /jobs '{"title":"x","company":"y","sourceUrl":"javascript:alert(1)"}'
+check "職缺網址是 javascript: → 400" 400 "$status"
+req POST /jobs '{"title":"網址測試","company":"y","sourceUrl":"https://example.com/jobs/1"}'
+check "職缺網址是 https → 201" 201 "$status"
 
 req POST /jobs '{"title":"重複","company":"y","externalId":"yourator:dup-'"$run"'"}'
 check "帶 externalId 新增" 201 "$status"

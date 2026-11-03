@@ -18,7 +18,8 @@ const tagList = z.array(z.string().trim().min(1).max(50)).max(50);
 const fields = {
   source: z.enum(SOURCE_IDS).optional(),
   externalId: z.string().max(200).nullish(),
-  sourceUrl: z.string().url().max(2000).nullish(),
+  // 只收 http(s)：網址會放進前端連結的 href，javascript: 之類的網址點下去會執行程式
+  sourceUrl: z.url({ protocol: /^https?$/ }).max(2000).nullish(),
   title: z.string().trim().min(1).max(200),
   company: z.string().trim().min(1).max(200),
   region: z.enum(REGION_IDS).nullish(),
