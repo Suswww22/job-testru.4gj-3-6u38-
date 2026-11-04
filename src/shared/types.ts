@@ -105,6 +105,8 @@ export interface SearchQuery {
   readonly categoryId: string | null;
   readonly subIds: ReadonlySet<string>;
   readonly regions: ReadonlySet<RegionId>;
+  /** 只勾了部分鄉鎮市區時，台灣就業通改用這些郵遞區號查詢 */
+  readonly zips?: ReadonlySet<string>;
   readonly keyword: string;
 }
 

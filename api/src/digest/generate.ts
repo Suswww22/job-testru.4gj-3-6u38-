@@ -100,7 +100,7 @@ async function topJobsOf(userId: string, notes: string[]): Promise<DigestData["t
   for (const keyword of setting.keywords) {
     for (const source of IMPORT_SOURCES) {
       try {
-        for (const j of await searchSource(source, keyword, (setting.region ?? undefined) as RegionId | undefined)) found.set(j.id, j);
+        for (const j of await searchSource(source, keyword, { regions: setting.region ? [setting.region as RegionId] : [], districts: [] })) found.set(j.id, j);
       } catch (err) {
         notes.push(err instanceof Error ? err.message : `${source} 搜尋失敗`);
       }

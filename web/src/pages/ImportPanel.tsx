@@ -9,6 +9,7 @@ import type { RegionId } from "../../../src/shared/types";
 import { api, ApiError } from "../api/client";
 import type { ImportItem, ImportSource } from "../api/types";
 import { Icon } from "../components/Icon";
+import { keysOf, RegionPicker, toggle, toQuery, type Area } from "../components/RegionPicker";
 import { salaryText } from "./JobsPage";
 
 const SOURCE_OPTIONS: readonly { id: ImportSource; name: string }[] = [
@@ -16,12 +17,12 @@ const SOURCE_OPTIONS: readonly { id: ImportSource; name: string }[] = [
   { id: "yourator", name: "Yourator" },
 ];
 const regionName = (id: RegionId | null | undefined) => REGIONS.find((r) => r.id === id)?.name ?? "";
-/** 搜尋列下方的快速地區，點一下就換地區並搜尋 */
+/** 搜尋列下方的快速地區，點一下就勾選或取消整個縣市並搜尋 */
 const QUICK_REGIONS: readonly RegionId[] = ["taipei", "newtaipei", "taichung", "remote"];
 
 export function ImportPanel({ onImported }: { onImported: () => void }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState({ source: "yourator" as ImportSource, region: "" as RegionId | "", keyword: "" });
+  const [form, setForm] = useState({ source: "yourator" as ImportSource, area: new Set<string>() as Area, keyword: "" });
   const [items, setItems] = useState<ImportItem[] | null>(null);
   const [total, setTotal] = useState(0);
 
@@ -49,17 +50,17 @@ export function ImportPanel({ onImported }: { onImported: () => void }) {
     },
   });
 
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    search.mutate({ ...form, keyword: form.keyword.trim() });
+  function run(next: typeof form) {
+    setForm(next);
+    search.mutate({ source: next.source, keyword: next.keyword.trim(), ...toQuery(next.area) });
   }
 
-  function pickRegion(region: RegionId) {
-    // 再點一次同一個地區就取消
-    const next = { ...form, region: form.region === region ? ("" as const) : region };
-    setForm(next);
-    search.mutate({ ...next, keyword: next.keyword.trim() });
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    run(form);
   }
+
+  const isPicked = (region: RegionId) => keysOf(region).every((k) => form.area.has(k));
 
   const addError = add.error instanceof ApiError && add.error.status !== 409 ? add.error.message : null;
 
@@ -76,13 +77,7 @@ export function ImportPanel({ onImported }: { onImported: () => void }) {
             aria-label="關鍵字"
           />
         </label>
-        <label className="field">
-          <Icon name="pin" />
-          <select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value as RegionId | "" })} aria-label="地區">
-            <option value="">全部地區</option>
-            {REGIONS.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
-        </label>
+        <RegionPicker value={form.area} onApply={(area) => run({ ...form, area })} />
         <label className="field">
           <Icon name="globe" />
           <select value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value as ImportSource })} aria-label="來源網站">
@@ -98,9 +93,9 @@ export function ImportPanel({ onImported }: { onImported: () => void }) {
             key={id}
             type="button"
             className="pill"
-            aria-pressed={form.region === id}
+            aria-pressed={isPicked(id)}
             disabled={search.isPending}
-            onClick={() => pickRegion(id)}
+            onClick={() => run({ ...form, area: toggle(form.area, keysOf(id), !isPicked(id)) })}
           >
             <Icon name="pin" />
             {regionName(id)}

@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 
 import { REGIONS } from "../../../src/shared/data.js";
+import { DISTRICTS, type CountyId } from "../../../src/shared/districts.js";
 import type { RegionId } from "../../../src/shared/types.js";
 import { requireAuth, userIdOf } from "../auth/middleware.js";
 import { prisma } from "../db.js";
@@ -18,11 +19,22 @@ importRouter.use(requireAuth);
 
 const MAX_RESULTS = 50;
 const REGION_IDS = REGIONS.map((r) => r.id) as [RegionId, ...RegionId[]];
+/** 鄉鎮市區以「縣市代號:區名」表示，例如 hsinchu:東區（新竹市與嘉義市都有東區） */
+const DISTRICT_KEYS = new Set(Object.entries(DISTRICTS).flatMap(([region, list]) => list.map((d) => `${region}:${d.name}`)));
+
+/** 逗號分隔的查詢參數 → 陣列 */
+const csv = z.string().default("").transform((s) => s.split(",").map((x) => x.trim()).filter((x) => x !== ""));
 
 const searchSchema = z.object({
   source: z.enum(IMPORT_SOURCES),
   keyword: z.string().trim().max(100).default(""),
-  region: z.enum(REGION_IDS).optional(),
+  regions: csv.pipe(z.array(z.enum(REGION_IDS)).max(REGION_IDS.length)),
+  districts: csv
+    .pipe(z.array(z.string().refine((k) => DISTRICT_KEYS.has(k), "不認得的鄉鎮市區")).max(DISTRICT_KEYS.size))
+    .transform((keys) => keys.map((k) => {
+      const [region, name] = k.split(":") as [CountyId, string];
+      return { region, name };
+    })),
 });
 
 // 每次搜尋都會讓伺服器去抓外部網站；依帳號限制次數，避免平台被當成爬蟲中繼站
@@ -38,10 +50,10 @@ const searchLimiter = rateLimit({
 });
 
 importRouter.get("/search", searchLimiter, async (req, res) => {
-  const { source, keyword, region } = searchSchema.parse(req.query);
+  const { source, keyword, regions, districts } = searchSchema.parse(req.query);
   let matched;
   try {
-    matched = await searchSource(source, keyword, region);
+    matched = await searchSource(source, keyword, { regions, districts });
   } catch (err) {
     throw new HttpError(502, err instanceof Error ? err.message : "外部網站暫時無法連線");
   }

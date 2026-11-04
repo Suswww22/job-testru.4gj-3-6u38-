@@ -1,5 +1,6 @@
 // 外部職缺搜尋的共用部分：匯入頁（/api/import/search）與每週週報都用這裡。
 
+import { DISTRICTS, districtOf, isCounty, zipsOf, type CountyId } from "../../../src/shared/districts.js";
 import { filterJobs } from "../../../src/shared/matcher.js";
 import type { Job, RegionId } from "../../../src/shared/types.js";
 import { ADAPTERS } from "../../../src/server/sources/index.js";
@@ -8,11 +9,30 @@ export const IMPORT_SOURCES = ["taiwanjobs", "yourator"] as const;
 export type ImportSource = (typeof IMPORT_SOURCES)[number];
 export const SOURCE_NAMES: Readonly<Record<ImportSource, string>> = { taiwanjobs: "台灣就業通", yourator: "Yourator" };
 
+/** 搜尋範圍：整個縣市（含遠端工作），或某縣市裡的部分鄉鎮市區；兩者皆空代表全台 */
+export interface Area {
+  readonly regions: readonly RegionId[];
+  readonly districts: readonly { readonly region: CountyId; readonly name: string }[];
+}
+
 /** 搜尋單一來源。連不上時丟出帶來源名稱的錯誤，呼叫端決定要回 502 還是記在週報裡 */
-export async function searchSource(source: ImportSource, keyword: string, region?: RegionId): Promise<Job[]> {
+export async function searchSource(source: ImportSource, keyword: string, area: Area = { regions: [], districts: [] }): Promise<Job[]> {
   const adapter = ADAPTERS.get(source);
   if (!adapter) throw new Error(`不支援的來源：${source}`);
-  const query = { categoryId: null, subIds: new Set<string>(), regions: new Set(region ? [region] : []), keyword };
+  // 只勾部分區的縣市 → 該縣市勾了哪些區
+  const partial = new Map<RegionId, Set<string>>();
+  for (const d of area.districts) partial.set(d.region, (partial.get(d.region) ?? new Set()).add(d.name));
+  const zips = new Set([
+    ...area.regions.filter(isCounty).flatMap(zipsOf),
+    ...area.districts.flatMap((d) => DISTRICTS[d.region].filter((x) => x.name === d.name).map((x) => x.zip)),
+  ]);
+  const query = {
+    categoryId: null,
+    subIds: new Set<string>(),
+    regions: new Set<RegionId>([...area.regions, ...partial.keys()]),
+    ...(partial.size > 0 ? { zips } : {}),
+    keyword,
+  };
   let found: Job[];
   try {
     found = await adapter.search(query);
@@ -20,7 +40,17 @@ export async function searchSource(source: ImportSource, keyword: string, region
     throw new Error(`${SOURCE_NAMES[source]}暫時無法連線：${err instanceof Error ? err.message : "未知錯誤"}`);
   }
   // 來源本身不支援關鍵字時（台灣就業通），在這裡用標題、技能、內文過濾；地區兩邊都再過濾一次
-  return filterJobs(found, adapter.handlesKeyword ? { ...query, keyword: "" } : query);
+  return filterJobs(found, adapter.handlesKeyword ? { ...query, keyword: "" } : query)
+    .filter((j) => inDistricts(j, partial));
+}
+
+/** 只勾部分區的縣市，職缺地址要落在勾選的區裡；地址沒寫到區（例如只寫「台北市」）就留著，寧可多給也不要漏 */
+function inDistricts(job: Job, partial: ReadonlyMap<RegionId, ReadonlySet<string>>): boolean {
+  if (job.region === null || !isCounty(job.region)) return true;
+  const names = partial.get(job.region);
+  if (!names) return true;
+  const d = districtOf(job.region, job.address);
+  return d === null || names.has(d);
 }
 
 /** 爬蟲的 Job 轉成 POST /api/jobs 接受的欄位 */

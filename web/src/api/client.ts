@@ -54,10 +54,11 @@ export const api = {
   listJobs: (q = "") => request<Page<Job>>("GET", `/jobs?limit=100${q ? `&q=${encodeURIComponent(q)}` : ""}`),
   createJob: (input: JobInput) => request<Job>("POST", "/jobs", input),
   deleteJob: (id: string) => request<void>("DELETE", `/jobs/${id}`),
-  searchImport: (q: { source: ImportSource; keyword: string; region: RegionId | "" }) =>
+  /** regions：整個縣市；districts：只勾部分區時的「縣市代號:區名」 */
+  searchImport: (q: { source: ImportSource; keyword: string; regions: readonly RegionId[]; districts: readonly string[] }) =>
     request<{ total: number; items: ImportItem[] }>(
       "GET",
-      `/import/search?${new URLSearchParams({ source: q.source, keyword: q.keyword, ...(q.region ? { region: q.region } : {}) })}`,
+      `/import/search?${new URLSearchParams({ source: q.source, keyword: q.keyword, regions: q.regions.join(","), districts: q.districts.join(",") })}`,
     ),
 
   listApplications: () => request<{ items: Application[] }>("GET", "/applications"),
