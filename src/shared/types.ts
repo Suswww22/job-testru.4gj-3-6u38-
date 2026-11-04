@@ -3,8 +3,10 @@
 import type { SkillName } from "./data.js";
 
 export type RegionId =
-  | "taipei" | "newtaipei" | "taoyuan" | "hsinchu"
-  | "taichung" | "tainan" | "kaohsiung" | "remote";
+  | "taipei" | "newtaipei" | "keelung" | "taoyuan" | "hsinchu" | "hsinchucounty" | "miaoli"
+  | "taichung" | "changhua" | "nantou" | "yunlin" | "chiayi" | "chiayicounty"
+  | "tainan" | "kaohsiung" | "pingtung" | "yilan" | "hualien" | "taitung"
+  | "penghu" | "kinmen" | "lienchiang" | "remote";
 
 export interface Region {
   readonly id: RegionId;

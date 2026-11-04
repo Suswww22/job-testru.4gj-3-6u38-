@@ -3,13 +3,29 @@
 import type { Category, Job, Region, Salary, SourceInfo, SubCategory } from "./types.js";
 
 export const REGIONS: readonly Region[] = [
-  { id: "taipei", name: "台北市", aliases: ["台北", "臺北", "taipei"] },
+  // 「臺」在比對前會轉成「台」，別名只需寫「台」
+  { id: "taipei", name: "台北市", aliases: ["台北", "taipei"] },
   { id: "newtaipei", name: "新北市", aliases: ["新北", "板橋", "新莊", "汐止"] },
+  { id: "keelung", name: "基隆市", aliases: ["基隆"] },
   { id: "taoyuan", name: "桃園市", aliases: ["桃園", "中壢"] },
-  { id: "hsinchu", name: "新竹", aliases: ["新竹", "竹北", "竹科"] },
-  { id: "taichung", name: "台中市", aliases: ["台中", "臺中"] },
-  { id: "tainan", name: "台南市", aliases: ["台南", "臺南", "南科"] },
+  { id: "hsinchu", name: "新竹市", aliases: ["新竹", "竹科"] },
+  { id: "hsinchucounty", name: "新竹縣", aliases: ["竹北", "竹東", "湖口"] },
+  { id: "miaoli", name: "苗栗縣", aliases: ["苗栗", "竹南", "頭份"] },
+  { id: "taichung", name: "台中市", aliases: ["台中"] },
+  { id: "changhua", name: "彰化縣", aliases: ["彰化"] },
+  { id: "nantou", name: "南投縣", aliases: ["南投"] },
+  { id: "yunlin", name: "雲林縣", aliases: ["雲林", "斗六"] },
+  { id: "chiayi", name: "嘉義市", aliases: ["嘉義"] },
+  { id: "chiayicounty", name: "嘉義縣", aliases: ["太保", "民雄"] },
+  { id: "tainan", name: "台南市", aliases: ["台南", "南科"] },
   { id: "kaohsiung", name: "高雄市", aliases: ["高雄"] },
+  { id: "pingtung", name: "屏東縣", aliases: ["屏東"] },
+  { id: "yilan", name: "宜蘭縣", aliases: ["宜蘭", "羅東"] },
+  { id: "hualien", name: "花蓮縣", aliases: ["花蓮"] },
+  { id: "taitung", name: "台東縣", aliases: ["台東"] },
+  { id: "penghu", name: "澎湖縣", aliases: ["澎湖"] },
+  { id: "kinmen", name: "金門縣", aliases: ["金門"] },
+  { id: "lienchiang", name: "連江縣", aliases: ["連江", "馬祖"] },
   { id: "remote", name: "遠端工作", aliases: ["遠端", "remote", "wfh"] },
 ];
 

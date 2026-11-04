@@ -104,11 +104,24 @@ export function lowestEducation(raw: string): Education {
   return found;
 }
 
+/** 縣市全名與別名，長的排前面 */
+const REGION_TERMS = REGIONS
+  .flatMap((r) => [r.name, ...r.aliases].map((term) => ({ id: r.id, term: term.toLowerCase() })))
+  .sort((a, b) => b.term.length - a.term.length);
+
+/**
+ * 從長的詞開始比，比中就把它從文字裡挖掉：
+ * 「新竹縣竹北市」先被「新竹縣」比中並挖掉，剩下的文字就不會再被「新竹」（新竹市）比中
+ */
 export function detectRegions(raw: string): RegionId[] {
-  const text = raw.toLowerCase();
-  return REGIONS
-    .filter((r) => r.aliases.some((a) => containsTerm(text, a.toLowerCase())))
-    .map((r) => r.id);
+  let text = raw.toLowerCase().replace(/臺/g, "台");
+  const found = new Set<RegionId>();
+  for (const { id, term } of REGION_TERMS) {
+    if (!containsTerm(text, term)) continue;
+    found.add(id);
+    text = text.split(term).join(" ");
+  }
+  return REGIONS.filter((r) => found.has(r.id)).map((r) => r.id);
 }
 
 /** 依職稱與描述猜最接近的本站分類；職稱命中的權重高於描述 */
